@@ -18,6 +18,9 @@ from src.preprocessing import preprocessing
 # Mesure time
 from timeit import default_timer as timer
 
+# Cache data
+# import shelve
+
 # Set random seed for reproducibility
 np.random.seed(1337)
 
@@ -54,7 +57,7 @@ idx_test = df_test['listing_id']
 
 from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords
 from src.transformers_time import tr_datetime
-#from src.transformers_debug import tr_dumpcsv
+from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.transformers_categorical import tr_enc_dispAddr, tr_enc_manager, tr_enc_building, tr_enc_streetAddr
 
@@ -69,6 +72,7 @@ tr_pipeline = pipe(
     tr_enc_building,
     tr_enc_streetAddr,
     tr_tfidf_lsa_lgb
+    #tr_dumpcsv
 )
 
 # Feature selection - features to keep
@@ -80,7 +84,7 @@ select_feat = DataFrameMapper([
     (["price"],RobustScaler()),
     ("NumDescWords",None),
     (["NumFeat"],StandardScaler()),
-    ("Created_Year",None),
+#    ("Created_Year",None), #Every listing is 2016
     ("Created_Month",None),
     ("Created_Day",None),
     ("Created_Hour",None),
@@ -95,8 +99,10 @@ select_feat = DataFrameMapper([
 ], df_out=True) #Needed to keep categorical information
 
 ################ Preprocessing #####################
+cache_file = './cache.db'
+
 x_trn, x_val, y_trn, y_val, X_test, labelencoder = preprocessing(
-   X, X_test, y, tr_pipeline, select_feat)
+   X, X_test, y, tr_pipeline, select_feat, cache_file)
 
 ############ Train and Validate ####################
 print("############ Final Classifier ######################")

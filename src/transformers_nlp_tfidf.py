@@ -17,9 +17,28 @@ from src.oof_predict import out_of_fold_predict
 
 from sklearn.model_selection import KFold
 
+# cache
+import os.path #Note: it might be safer to use pathlib, to make sure directory/subdirectory context is kept
+import shelve
+from pickle import HIGHEST_PROTOCOL
+
 # Massive leakage, check cross val predict
-def tr_tfidf_lsa_lgb(train, test, y):
+def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     print("############# TF-IDF + LSA step ################")
+    cache_key_train = 'tfidf_lsa_lgb_train'
+    cache_key_test = 'tfidf_lsa_lgb_test'
+    
+    #Check if cache file exist and if data for this step is cached
+    if os.path.isfile(cache_file):
+        db = shelve.open(cache_file, flag='r', protocol=HIGHEST_PROTOCOL)
+        if cache_key_train in db and cache_key_test:
+            print('#### Using cached data ####')
+            train_out = train.assign(**db[cache_key_train])
+            test_out = test.assign(**db[cache_key_test])
+            db.close()
+            return train_out, test_out, y, cache_file
+
+    print('# No cache detected, computing from scratch #')
     vectorizer = TfidfVectorizer(max_features=2**16,
                              min_df=2, stop_words='english',
                              use_idf=True)
@@ -96,8 +115,16 @@ def tr_tfidf_lsa_lgb(train, test, y):
         'tfidf_' + le.classes_[2]: [row[2] for row in test_predictions]
     }
     
+    print('Caching features in ' + cache_file)
+    db = shelve.open(cache_file, flag='c', 
+                     protocol=HIGHEST_PROTOCOL)
+    db[cache_key_train] = tfidf_train_names
+    db[cache_key_test] = tfidf_test_names
+    db.close()
+    
+    print('Adding features to dataframe')
     train_out = train.assign(**tfidf_train_names)
     test_out = test.assign(**tfidf_test_names)
 
 
-    return train_out, test_out, y
+    return train_out, test_out, y, cache_file
