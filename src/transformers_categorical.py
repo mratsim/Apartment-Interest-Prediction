@@ -8,7 +8,8 @@ def _encode_categoricals(train,test, sColumn):
     
     def _trans(df, sColumn, le):
         encoded = le.transform(df[sColumn])
-        df['encoded_' + sColumn] = pd.Series(encoded, dtype="category")
+        df['encoded_' + sColumn] = encoded
+        df['encoded_' + sColumn] = df['encoded_' + sColumn].astype('category')
         return df
     return _trans(train, sColumn, le),_trans(test, sColumn, le)
        

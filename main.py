@@ -48,7 +48,6 @@ idx_test = df_test['listing_id']
 # manager skill (2*high + medium)
 # TFIDF - Naive Bayes
 
-
 #######################
 
 # # Command Center
