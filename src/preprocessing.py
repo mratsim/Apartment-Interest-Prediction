@@ -17,7 +17,7 @@ def preprocessing(X_train, X_test, y_train, tr_pipeline, select_feat):
     x_val = select_feat.transform(x_val)
     X_test = select_feat.transform(X_test)
 
-    # Encode labels to integers
+    # Encode y labels to integers
     le = LabelEncoder()
     le.fit(y_train)
     y_trn = le.transform(y_trn)

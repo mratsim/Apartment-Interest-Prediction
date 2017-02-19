@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 # feature preprocessing
-from sklearn.preprocessing import LabelEncoder, Normalizer, LabelBinarizer,RobustScaler,StandardScaler, OneHotEncoder
+from sklearn.preprocessing import Normalizer, LabelBinarizer,RobustScaler,StandardScaler, OneHotEncoder
 
 from sklearn_pandas import DataFrameMapper
 
@@ -40,8 +40,6 @@ idx_test = df_test['listing_id']
 
 ###### TODO ###########
 # Bucket nombre de chambres et de bathrooms
-# Heure de la journée
-# Jour de la semaine
 # Retirer numéro de rue
 # Imputer les rues sans géoloc
 # Quartier (centre le plus proche)
@@ -59,6 +57,7 @@ from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords
 from src.transformers_time import tr_datetime
 #from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
+from src.transformers_categorical import tr_enc_dispAddr, tr_enc_manager, tr_enc_building, tr_enc_streetAddr
 
 # Feature engineering - sequence of transformations
 tr_pipeline = pipe(
@@ -66,6 +65,10 @@ tr_pipeline = pipe(
     tr_numfeat,
     tr_numdescwords,
     tr_datetime,
+    tr_enc_dispAddr,
+    tr_enc_manager,
+    tr_enc_building,
+    tr_enc_streetAddr,
     tr_tfidf_lsa_lgb
 )
 
@@ -73,20 +76,24 @@ tr_pipeline = pipe(
 select_feat = DataFrameMapper([
     (["bathrooms"],RobustScaler()),
     (["bedrooms"],RobustScaler()),
-    (["latitude"],None),
-    (["longitude"],None),
+    ("latitude",None),
+    ("longitude",None),
     (["price"],RobustScaler()),
-    (["NumDescWords"],None),
+    ("NumDescWords",None),
     (["NumFeat"],StandardScaler()),
-    (["Created_Year"],None),
-    (["Created_Month"],None),
-    (["Created_Day"],None),
-    (["Created_Hour"],None),
-    (["Created_DayOfWeek"],None),
-    (["tfidf_high"],None),
-    (["tfidf_medium"],None),
-    (["tfidf_low"],None)
-])
+    ("Created_Year",None),
+    ("Created_Month",None),
+    ("Created_Day",None),
+    ("Created_Hour",None),
+    ("Created_DayOfWeek",None),
+    ("tfidf_high",None),
+    ("tfidf_medium",None),
+    ("tfidf_low",None),
+    ("encoded_display_address",None), #Categorical feature
+    ("encoded_manager_id",None), #Categorical feature
+    ("encoded_building_id",None), #Categorical feature
+    ("encoded_street_address",None) #Categorical feature
+], df_out=True) #Needed to keep categorical information
 
 ################ Preprocessing #####################
 x_trn, x_val, y_trn, y_val, X_test, labelencoder = preprocessing(
