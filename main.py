@@ -83,7 +83,7 @@ select_feat = DataFrameMapper([
     ("longitude",None),
     (["price"],RobustScaler()),
     ("NumDescWords",None),
-    (["NumFeat"],StandardScaler()),
+    ("NumFeat",None),
 #    ("Created_Year",None), #Every listing is 2016
     ("Created_Month",None),
     ("Created_Day",None),
@@ -98,6 +98,14 @@ select_feat = DataFrameMapper([
     ("encoded_street_address",None) #Categorical feature
 ], df_out=True) #Needed to keep categorical information
 
+# Workaround because DataFrameMapper doesn't preserve categorical data
+list_categoricals = [
+    "encoded_display_address",
+    "encoded_manager_id",
+    "encoded_building_id",
+    "encoded_street_address"
+]
+
 ################ Preprocessing #####################
 cache_file = './cache.db'
 
@@ -106,7 +114,7 @@ x_trn, x_val, y_trn, y_val, X_test, labelencoder = preprocessing(
 
 ############ Train and Validate ####################
 print("############ Final Classifier ######################")
-gbm, metric = train_lgb(x_trn, x_val, y_trn, y_val)
+gbm, metric = train_lgb(x_trn, x_val, y_trn, y_val, list_categoricals)
 
 ################## Predict #########################
 output(X_test,idx_test,gbm,labelencoder, metric)

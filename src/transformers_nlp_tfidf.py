@@ -21,7 +21,7 @@ from sklearn.model_selection import KFold
 import os.path #Note: it might be safer to use pathlib, to make sure directory/subdirectory context is kept
 import shelve
 from pickle import HIGHEST_PROTOCOL
-from src.cache import load_from_cache
+from src.cache import load_from_cache, save_to_cache
 
 # Massive leakage, check cross val predict
 def tr_tfidf_lsa_lgb(train, test, y, cache_file):
@@ -76,7 +76,9 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     gbm = LGBMClassifier(
         n_estimators=2048,
         seed=42,
-        objective='multiclass'
+        objective='multiclass',
+        colsample_bytree='0.8',
+        subsample='0.8'
     )
     
     kf = KFold(n_splits=5, shuffle=True, random_state=1337)

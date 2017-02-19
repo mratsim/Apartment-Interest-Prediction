@@ -2,7 +2,13 @@
 import lightgbm as lgb
 from src.metrics import mlogloss
 
-def train_lgb(x_trn, x_val, y_trn, y_val):
+def train_lgb(x_trn, x_val, y_trn, y_val, list_categoricals='auto'):
+    print('Description of training data')
+    print(x_trn.describe)
+    print('Type of data - check especially for categorical')
+    print(x_trn.dtypes)
+    print('Check if detected as categorical: encoded_display_address', '  -  ',hasattr(x_trn['encoded_display_address'],'cat'))
+    
     lgb_train = lgb.Dataset(x_trn, y_trn)
     lgb_eval = lgb.Dataset(x_val, y_val, reference=lgb_train)
 
@@ -29,7 +35,7 @@ def train_lgb(x_trn, x_val, y_trn, y_val):
                     early_stopping_rounds=50,
                     verbose_eval=False,
                     feature_name='auto',
-                    categorical_feature='auto')
+                    categorical_feature=list_categoricals)
 
     print('Start validating...')
     # predict
