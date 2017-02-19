@@ -28,6 +28,11 @@ start_time = timer()
 df_train = pd.read_json(open("./data/train.json", "r"))
 df_test = pd.read_json(open("./data/test.json", "r"))
 
+print('Input training data has shape: ',df_train.shape)
+print('Input test data has shape:     ',df_test.shape)
+
+
+
 X = df_train
 X_test = df_test
 y = df_train['interest_level']
@@ -76,6 +81,8 @@ select_feat = DataFrameMapper([
     (["Created_Year"],None),
     (["Created_Month"],None),
     (["Created_Day"],None),
+    (["Created_Hour"],None),
+    (["Created_DayOfWeek"],None),
     (["tfidf_high"],None),
     (["tfidf_medium"],None),
     (["tfidf_low"],None)
