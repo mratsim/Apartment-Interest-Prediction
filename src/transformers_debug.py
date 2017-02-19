@@ -1,5 +1,3 @@
-import pandas as pd
-
 ####### Debug Transformer ###########
 # Use this transformer anywhere in your Pipeline to dump your dataframe to CSV
 def tr_dumpcsv(train,test, y):

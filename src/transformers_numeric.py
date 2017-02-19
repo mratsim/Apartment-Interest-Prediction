@@ -1,5 +1,3 @@
-import pandas as pd
-
 # This transformer extracts the number of photos
 def tr_numphot(train, test, y):
     def _trans(df):

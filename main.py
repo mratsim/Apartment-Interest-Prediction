@@ -16,10 +16,13 @@ from main_train import train_lgb
 from src.preprocessing import preprocessing
 
 # Mesure time
-import time
+from timeit import default_timer as timer
 
 # Set random seed for reproducibility
 np.random.seed(1337)
+
+# Start timer
+start_time = timer()
 
 # # Import data
 df_train = pd.read_json(open("./data/train.json", "r"))
@@ -48,15 +51,15 @@ idx_test = df_test['listing_id']
 from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords
 from src.transformers_time import tr_datetime
 #from src.transformers_debug import tr_dumpcsv
-from src.transformers_nlp_tfidf import tr_tfidf_lsa
+from src.transformers_nlp_tfidf_Copy1 import tr_tfidf_lsa
 
 # Feature engineering - sequence of transformations
 tr_pipeline = pipe(
     tr_numphot,
     tr_numfeat,
     tr_numdescwords,
-    tr_datetime
-#    tr_tfidf_lsa
+    tr_datetime,
+    tr_tfidf_lsa
 )
 
 # Feature selection - features to keep
@@ -70,8 +73,8 @@ select_feat = DataFrameMapper([
     (["NumFeat"],StandardScaler()),
     (["Created_Year"],None),
     (["Created_Month"],None),
-    (["Created_Day"],None)
-    #(["tfidf_high"],None),
+    (["Created_Day"],None),
+    (["tfidf_high"],None),
     #(["tfidf_medium"],None),
     #(["tfidf_low"],None)
 ])
@@ -86,3 +89,6 @@ gbm = train_lgb(x_trn, x_val, y_trn, y_val)
 ################## Predict #########################
 output(X_test,idx_test,gbm,labelencoder)
 
+end_time = timer()
+print("################## Success #########################s")
+print("Elapsed time: %s" % (end_time - start_time))

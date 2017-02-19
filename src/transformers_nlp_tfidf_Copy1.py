@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder, Normalizer
 from sklearn.model_selection import train_test_split
 
 # Classifier
-import lightgbm as lgb
+from lightgbm import LGBMClassifier
 
 # Clean up text
 from bs4 import BeautifulSoup
@@ -58,42 +58,29 @@ def tr_tfidf_lsa(train, test, y):
 
     
     
-    lgb_train = lgb.Dataset(X_train, y_train)
-    lgb_eval = lgb.Dataset(X_test, y_test, reference=lgb_train)
-    
-    # specify your configurations as a dict
-    params = {
-        'task': 'train',
-        'boosting_type': 'gbdt',
-        'objective': 'multiclass',
-        'num_class': 3,
-        'metric': {'multi_logloss'},
-        'learning_rate': 0.1,
-        #'feature_fraction': 0.9,
-        #'bagging_fraction': 0.8,
-        #'bagging_freq': 5,
-        'verbose': 0
-    }
-
     print('Start training TF-IDF...')
     # train
-    gbm = lgb.train(params,
-                    lgb_train,
-                    num_boost_round=999,
-                    valid_sets=lgb_eval,
-                    early_stopping_rounds=50,
-                   feature_name='auto',
-                   categorical_feature='auto')
+    gbm = LGBMClassifier(
+        n_estimators=2048,
+        seed=42,
+        objective='multiclass'
+    )
+    
+    gbm.fit(X_train,y_train,
+            eval_set=[(X_test, y_test)],
+            eval_metric='multi_logloss',
+            early_stopping_rounds=50
+           )
     
     print('Start validating TF-IDF...')
     # predict
-    y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
+    y_pred = gbm.predict_proba(X_test, num_iteration=gbm.best_iteration)
     # eval
     print('The mlogloss of prediction is:', mlogloss(y_test, y_pred))
     
     print('Start predicting TF-IDF...')
-    train_predictions = gbm.predict(X_train_lsa, num_iteration=gbm.best_iteration)
-    test_predictions = gbm.predict(X_test_lsa, num_iteration=gbm.best_iteration)
+    train_predictions = gbm.predict_proba(X_train_lsa, num_iteration=gbm.best_iteration)
+    test_predictions = gbm.predict_proba(X_test_lsa, num_iteration=gbm.best_iteration)
 
     tfidf_train_names = {
         'tfidf_' + le.classes_[0]: [row[0] for row in train_predictions],
