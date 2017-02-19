@@ -27,12 +27,15 @@ def train_lgb(x_trn, x_val, y_trn, y_val):
                     num_boost_round=2048,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=50,
-                   feature_name='auto',
-                   categorical_feature='auto')
+                    verbose_eval=False,
+                    feature_name='auto',
+                    categorical_feature='auto')
 
-    print('Start predicting...')
+    print('Start validating...')
     # predict
     y_pred = gbm.predict(x_val, num_iteration=gbm.best_iteration)
     # eval
-    print('\n\nThe mlogloss of prediction is:', mlogloss(y_val, y_pred))
-    return gbm
+    metric = mlogloss(y_val, y_pred)
+    print('We stopped at boosting round: ', gbm.best_iteration)
+    print('The mlogloss of prediction is: ', metric)
+    return gbm, metric

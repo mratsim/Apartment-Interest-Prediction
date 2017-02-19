@@ -43,6 +43,8 @@ idx_test = df_test['listing_id']
 # Distance par rapport au centre
 # Clusteriser la latitude/longitude
 # manager skill (2*high + medium)
+# TFIDF - Naive Bayes
+
 
 #######################
 
@@ -51,7 +53,7 @@ idx_test = df_test['listing_id']
 from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords
 from src.transformers_time import tr_datetime
 #from src.transformers_debug import tr_dumpcsv
-from src.transformers_nlp_tfidf_Copy1 import tr_tfidf_lsa
+from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 
 # Feature engineering - sequence of transformations
 tr_pipeline = pipe(
@@ -59,7 +61,7 @@ tr_pipeline = pipe(
     tr_numfeat,
     tr_numdescwords,
     tr_datetime,
-    tr_tfidf_lsa
+    tr_tfidf_lsa_lgb
 )
 
 # Feature selection - features to keep
@@ -69,14 +71,14 @@ select_feat = DataFrameMapper([
     (["latitude"],None),
     (["longitude"],None),
     (["price"],RobustScaler()),
-    # (["NumDescWords"],None),
+    (["NumDescWords"],None),
     (["NumFeat"],StandardScaler()),
     (["Created_Year"],None),
     (["Created_Month"],None),
     (["Created_Day"],None),
     (["tfidf_high"],None),
-    #(["tfidf_medium"],None),
-    #(["tfidf_low"],None)
+    (["tfidf_medium"],None),
+    (["tfidf_low"],None)
 ])
 
 ################ Preprocessing #####################
@@ -84,11 +86,12 @@ x_trn, x_val, y_trn, y_val, X_test, labelencoder = preprocessing(
    X, X_test, y, tr_pipeline, select_feat)
 
 ############ Train and Validate ####################
-gbm = train_lgb(x_trn, x_val, y_trn, y_val)
+print("############ Final Classifier ######################")
+gbm, metric = train_lgb(x_trn, x_val, y_trn, y_val)
 
 ################## Predict #########################
-output(X_test,idx_test,gbm,labelencoder)
+output(X_test,idx_test,gbm,labelencoder, metric)
 
 end_time = timer()
-print("################## Success #########################s")
+print("################## Success #########################")
 print("Elapsed time: %s" % (end_time - start_time))

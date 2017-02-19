@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder, Normalizer
 from sklearn.model_selection import train_test_split
 
 # Classifier
-import lightgbm as lgb
+from lightgbm import LGBMClassifier
 
 # Clean up text
 from bs4 import BeautifulSoup
@@ -13,10 +13,13 @@ from bs4 import BeautifulSoup
 # Local helper function
 from src.pipe import pipe
 from src.metrics import mlogloss
+from src.oof_predict import out_of_fold_predict
 
+from sklearn.model_selection import KFold
 
 # Massive leakage, check cross val predict
-def tr_tfidf_lsa(train, test, y):
+def tr_tfidf_lsa_lgb(train, test, y):
+    print("############# TF-IDF + LSA step ################")
     vectorizer = TfidfVectorizer(max_features=2**16,
                              min_df=2, stop_words='english',
                              use_idf=True)
@@ -47,59 +50,45 @@ def tr_tfidf_lsa(train, test, y):
     #explained_variance = svd.explained_variance_ratio_.sum()
     #print("  Explained variance of the SVD step: {}%".format(int(explained_variance * 100)))
 
-    
-    
-    X_train, X_test, y_train, y_test = train_test_split(X_train_lsa, y, test_size=0.2, random_state=42)
-
     le = LabelEncoder()
-    le.fit(y)
-    y_train = le.transform(y_train)
-    y_test = le.transform(y_test)
+    y_encode = le.fit_transform(y)
+    
+    X_train, X_test, y_train, y_test = train_test_split(X_train_lsa, y_encode, test_size=0.2, random_state=42)
 
-    
-    
-    lgb_train = lgb.Dataset(X_train, y_train)
-    lgb_eval = lgb.Dataset(X_test, y_test, reference=lgb_train)
-    
-    # specify your configurations as a dict
-    params = {
-        'task': 'train',
-        'boosting_type': 'gbdt',
-        'objective': 'multiclass',
-        'num_class': 3,
-        'metric': {'multi_logloss'},
-        'learning_rate': 0.1,
-        #'feature_fraction': 0.9,
-        #'bagging_fraction': 0.8,
-        #'bagging_freq': 5,
-        'verbose': 0
-    }
-
-    print('Start training TF-IDF...')
     # train
-    gbm = lgb.train(params,
-                    lgb_train,
-                    num_boost_round=999,
-                    valid_sets=lgb_eval,
-                    early_stopping_rounds=50,
-                   feature_name='auto',
-                   categorical_feature='auto')
+    gbm = LGBMClassifier(
+        n_estimators=2048,
+        seed=42,
+        objective='multiclass'
+    )
     
-    print('Start validating TF-IDF...')
-    # predict
-    y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
-    # eval
-    print('The mlogloss of prediction is:', mlogloss(y_test, y_pred))
-    
-    print('Start predicting TF-IDF...')
-    train_predictions = gbm.predict(X_train_lsa, num_iteration=gbm.best_iteration)
-    test_predictions = gbm.predict(X_test_lsa, num_iteration=gbm.best_iteration)
+    kf = KFold(n_splits=5, shuffle=True, random_state=1337)
+
+    print('Start training - Number of folds: ', kf.get_n_splits())
+    train_predictions = out_of_fold_predict(gbm, X_train_lsa, y_encode, kf.split(X_train_lsa))
 
     tfidf_train_names = {
         'tfidf_' + le.classes_[0]: [row[0] for row in train_predictions],
         'tfidf_' + le.classes_[1]: [row[1] for row in train_predictions],
         'tfidf_' + le.classes_[2]: [row[2] for row in train_predictions]
     }
+    
+    gbm.fit(X_train,y_train,
+            eval_set=[(X_test, y_test)],
+            eval_metric='multi_logloss',
+            early_stopping_rounds=50,
+            verbose = False
+           )
+    
+    print('Start validating TF-IDF + LSA...')
+    # predict
+    y_pred = gbm.predict_proba(X_test, num_iteration=gbm.best_iteration)
+    # eval
+    print('We stopped at boosting round: ', gbm.best_iteration)
+    print('The mlogloss of prediction is:', mlogloss(y_test, y_pred))
+    
+    print('Start predicting TF-IDF + LSA...')
+    test_predictions = gbm.predict_proba(X_test_lsa, num_iteration=gbm.best_iteration)
     
     tfidf_test_names = {
         'tfidf_' + le.classes_[0]: [row[0] for row in test_predictions],
