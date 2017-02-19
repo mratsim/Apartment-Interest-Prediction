@@ -13,3 +13,6 @@ def compose(*funcs):
 # pipe functions, reverse the order so that it's in the usual FIFO function order
 def pipe(*funcs):
     return compose(*reversed(funcs))
+
+# WARNING: Beware of modifying the original columns of dataframe in place in a  multiprocessing context.
+# It can create race condition, and unexpected behaviour
