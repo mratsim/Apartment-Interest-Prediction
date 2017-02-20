@@ -5,21 +5,16 @@ import numpy as np
 import pandas as pd
 
 # feature preprocessing
-from sklearn.preprocessing import Normalizer, LabelBinarizer,RobustScaler,StandardScaler, OneHotEncoder
-
-from sklearn_pandas import DataFrameMapper
+from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder
 
 # Custom helper functions
-from src.command_center import feat_extraction_pipe
+from src.star_command import feat_extraction_pipe
 from main_output import output
 from main_train import train_lgb
 from src.preprocessing import preprocessing
 
 # Mesure time
 from timeit import default_timer as timer
-
-# Cache data
-# import shelve
 
 # Set random seed for reproducibility
 np.random.seed(1337)
@@ -34,8 +29,6 @@ df_test = pd.read_json(open("./data/test.json", "r"))
 print('Input training data has shape: ',df_train.shape)
 print('Input test data has shape:     ',df_test.shape)
 
-
-
 X = df_train
 X_test = df_test
 y = df_train['interest_level']
@@ -43,7 +36,7 @@ idx_test = df_test['listing_id']
 
 ###### TODO ###########
 # Bucket nombre de chambres et de bathrooms
-# Retirer numéro de rue
+# Retirer numéro de rue - DONE ?
 # Imputer les rues sans géoloc
 # Quartier (centre le plus proche)
 # Distance par rapport au centre
@@ -77,11 +70,11 @@ tr_pipeline = feat_extraction_pipe(
 
 # Feature selection - features to keep
 select_feat = [
-    (["bathrooms"],RobustScaler()),
-    (["bedrooms"],RobustScaler()),
+    (["bathrooms"],None),
+    (["bedrooms"],None),
     (["latitude"],None),
     ("longitude",None),
-    (["price"],RobustScaler()),
+    (["price"],None),
     ("NumDescWords",None),
     ("NumFeat",None),
 #    ("Created_Year",None), #Every listing is 2016
@@ -92,10 +85,10 @@ select_feat = [
     #("tfidf_high",None),
     #("tfidf_medium",None),
     #("tfidf_low",None),
-    (["encoded_display_address"],None), #Categorical feature
-    ("encoded_manager_id",None), #Categorical feature
-    ("encoded_building_id",None), #Categorical feature
-    ("encoded_street_address",None) #Categorical feature
+    (["encoded_display_address"],OneHotEncoder(sparse='False',handle_unknown='ignore')), #Categorical feature
+    (["encoded_manager_id"],OneHotEncoder(sparse='False',handle_unknown='ignore')), #Categorical feature
+    (["encoded_building_id"],OneHotEncoder(sparse='False',handle_unknown='ignore')), #Categorical feature
+    (["encoded_street_address"],OneHotEncoder(sparse='False',handle_unknown='ignore')) #Categorical feature
 ]
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer

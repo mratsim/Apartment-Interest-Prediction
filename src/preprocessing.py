@@ -1,6 +1,6 @@
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from src.command_center import feat_selection
+from src.star_command import feat_selection
 
 def preprocessing(X_train, X_test, y_train, tr_pipeline, select_feat, cache_file):
     # Engineer features

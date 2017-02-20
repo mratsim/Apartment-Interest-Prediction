@@ -25,6 +25,7 @@ def zip_with(f, list_of_tuple):
 #     return pool.starmap(f, zip(*list_of_tuple))
 
 ############# Helper pandas ###################
+# Concat dataframes vertically
 def vconcat(*list_of_df):
     return pd.concat([*list_of_df], axis=1)
 
@@ -48,6 +49,7 @@ def feat_selection(ft_selection,df_train,df_val,df_test):
     
     ## Multiprocessing is slower and obfuscate error (MemoryError or TrhadLock instead of the real issue)
     ## selecting 18 features : 44-47 seconds for no MP vs 2x63 with MP. GIL/pickle issue ?
+    ## Alternative to explore: joblib, celery depending on overhead
     # with Pool(cpu_count()) as mp:
     #     tuples_trn_val_test = mp.starmap(feat_transformation,ft_selection)
     #     trn, val, tst = par_zip_with(vconcat,tuples_trn_val_test, mp)
@@ -78,7 +80,7 @@ def feat_transformation(train,valid, test,sCol,Transformer=None):
         feat_label = ''
         for serie in transformed:
             if isinstance(Transformer, OneHotEncoder):
-                feat_label = label + '_' + Transformer.active_features_[n]
+                feat_label = label + '_' + str(Transformer.active_features_[n])
             else:
                 try:
                     feat_label = label + '_' + Transformer.classes_[n]

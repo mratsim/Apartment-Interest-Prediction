@@ -32,8 +32,7 @@ def train_lgb(x_trn, x_val, y_trn, y_val):
                     valid_sets=lgb_eval,
                     early_stopping_rounds=50,
                     verbose_eval=False,
-                    feature_name='auto',
-                    categorical_feature='auto')
+                    feature_name='auto')
 
     print('Start validating...')
     # predict

@@ -1,5 +1,5 @@
 from sklearn.preprocessing import LabelEncoder
-import pandas as pd
+# import pandas as pd
 
 # Apply Label encoder
 def _encode_categoricals(train,test, sColumn):
@@ -11,7 +11,7 @@ def _encode_categoricals(train,test, sColumn):
         # Warning, there is a bug(?) if trying to us pd.Series(encoded, dtype='category') here
         # mlogloss is negatively impacted by 0,003
         df['encoded_' + sColumn] = encoded
-        # CRITICAL, LightGBM coredump on categorical
+        # CRITICAL, LightGBM coredumps on categorical
         # df['encoded_' + sColumn] = df['encoded_' + sColumn].astype('category')
         return df
     return _trans(train, sColumn, le),_trans(test, sColumn, le)
