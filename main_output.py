@@ -4,6 +4,10 @@ import time
 ####### Predict and format output #######
 def output(X_test, listing_id, classifier, LabelEncoder, metric):
     print('Start predicting...')
+    
+    # print('Type of data - Test - check especially for categorical')
+    # print(X_test.dtypes)
+    
     predictions = classifier.predict(X_test, num_iteration=classifier.best_iteration)
     
     #debug

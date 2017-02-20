@@ -11,7 +11,6 @@ from lightgbm import LGBMClassifier
 from bs4 import BeautifulSoup
 
 # Local helper function
-from src.pipe import pipe
 from src.metrics import mlogloss
 from src.oof_predict import out_of_fold_predict
 

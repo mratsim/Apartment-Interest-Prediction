@@ -12,7 +12,7 @@ def load_from_cache(cache_file, key_train, key_test):
                 print('#### Using cached data ####')
                 dict_train = db[key_train]
                 dict_test = db[key_test]
-                db.close()
+                #db.close()
                 return dict_train, dict_test
     return None, None
 
@@ -20,4 +20,4 @@ def save_to_cache(cache_file, key_train, key_test, dict_train, dict_test):
     with shelve.open(cache_file, flag='c', protocol=HIGHEST_PROTOCOL) as db:
         db[key_train] = dict_train
         db[key_test] = dict_test
-        db.close()
+        #db.close()

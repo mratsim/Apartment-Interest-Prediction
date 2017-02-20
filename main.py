@@ -10,7 +10,7 @@ from sklearn.preprocessing import Normalizer, LabelBinarizer,RobustScaler,Standa
 from sklearn_pandas import DataFrameMapper
 
 # Custom helper functions
-from src.pipe import pipe
+from src.command_center import feat_extraction_pipe
 from main_output import output
 from main_train import train_lgb
 from src.preprocessing import preprocessing
@@ -62,7 +62,7 @@ from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.transformers_categorical import tr_enc_dispAddr, tr_enc_manager, tr_enc_building, tr_enc_streetAddr
 
 # Feature engineering - sequence of transformations
-tr_pipeline = pipe(
+tr_pipeline = feat_extraction_pipe(
     tr_numphot,
     tr_numfeat,
     tr_numdescwords,
@@ -76,10 +76,10 @@ tr_pipeline = pipe(
 )
 
 # Feature selection - features to keep
-select_feat = DataFrameMapper([
+select_feat = [
     (["bathrooms"],RobustScaler()),
     (["bedrooms"],RobustScaler()),
-    ("latitude",None),
+    (["latitude"],None),
     ("longitude",None),
     (["price"],RobustScaler()),
     ("NumDescWords",None),
@@ -89,22 +89,16 @@ select_feat = DataFrameMapper([
     ("Created_Day",None),
     ("Created_Hour",None),
     ("Created_DayOfWeek",None),
-    ("tfidf_high",None),
-    ("tfidf_medium",None),
-    ("tfidf_low",None),
-    ("encoded_display_address",None), #Categorical feature
+    #("tfidf_high",None),
+    #("tfidf_medium",None),
+    #("tfidf_low",None),
+    (["encoded_display_address"],None), #Categorical feature
     ("encoded_manager_id",None), #Categorical feature
     ("encoded_building_id",None), #Categorical feature
     ("encoded_street_address",None) #Categorical feature
-], df_out=True) #Needed to keep categorical information
-
-# Workaround because DataFrameMapper doesn't preserve categorical data
-list_categoricals = [
-    "encoded_display_address",
-    "encoded_manager_id",
-    "encoded_building_id",
-    "encoded_street_address"
 ]
+
+# Currently LightGBM core dumps on categorical data, deactivate in the transformer
 
 ################ Preprocessing #####################
 cache_file = './cache.db'
@@ -114,7 +108,7 @@ x_trn, x_val, y_trn, y_val, X_test, labelencoder = preprocessing(
 
 ############ Train and Validate ####################
 print("############ Final Classifier ######################")
-gbm, metric = train_lgb(x_trn, x_val, y_trn, y_val, list_categoricals)
+gbm, metric = train_lgb(x_trn, x_val, y_trn, y_val)
 
 ################## Predict #########################
 output(X_test,idx_test,gbm,labelencoder, metric)
