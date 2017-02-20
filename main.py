@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 # feature preprocessing
-from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder
+from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder, LabelEncoder, LabelBinarizer
 
 # Custom helper functions
 from src.star_command import feat_extraction_pipe
@@ -52,7 +52,6 @@ from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
-from src.transformers_categorical import tr_enc_dispAddr, tr_enc_manager, tr_enc_building, tr_enc_streetAddr
 
 # Feature engineering - sequence of transformations
 tr_pipeline = feat_extraction_pipe(
@@ -60,35 +59,31 @@ tr_pipeline = feat_extraction_pipe(
     tr_numfeat,
     tr_numdescwords,
     tr_datetime,
-    tr_enc_dispAddr,
-    tr_enc_manager,
-    tr_enc_building,
-    tr_enc_streetAddr,
     tr_tfidf_lsa_lgb
     #tr_dumpcsv
 )
 
 # Feature selection - features to keep
 select_feat = [
-    (["bathrooms"],None),
+    ("bathrooms",None),
     (["bedrooms"],None),
     (["latitude"],None),
-    ("longitude",None),
+    (["longitude"],None),
     (["price"],None),
-    ("NumDescWords",None),
-    ("NumFeat",None),
+    (["NumDescWords"],None),
+    (["NumFeat"],None),
 #    ("Created_Year",None), #Every listing is 2016
-    ("Created_Month",None),
-    ("Created_Day",None),
-    ("Created_Hour",None),
-    ("Created_DayOfWeek",None),
+    (["Created_Month"],None),
+    (["Created_Day"],None),
+    (["Created_Hour"],None),
+    (["Created_DayOfWeek"],None),
     #("tfidf_high",None),
     #("tfidf_medium",None),
     #("tfidf_low",None),
-    (["encoded_display_address"],OneHotEncoder(sparse='False',handle_unknown='ignore')), #Categorical feature
-    (["encoded_manager_id"],OneHotEncoder(sparse='False',handle_unknown='ignore')), #Categorical feature
-    (["encoded_building_id"],OneHotEncoder(sparse='False',handle_unknown='ignore')), #Categorical feature
-    (["encoded_street_address"],OneHotEncoder(sparse='False',handle_unknown='ignore')) #Categorical feature
+    ("display_address",LabelBinarizer(sparse_output=True)),
+    ("manager_id",LabelBinarizer(sparse_output=True)),
+    ("building_id",LabelBinarizer(sparse_output=True)),
+    ("street_address",LabelBinarizer(sparse_output=True))
 ]
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer
