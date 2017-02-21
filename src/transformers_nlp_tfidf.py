@@ -57,7 +57,7 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     test_vect = vectorizer.transform(test_raw)
     # print(vectorizer.get_feature_names())
     
-    svd = TruncatedSVD(100)
+    svd = TruncatedSVD(100) #Recommended 100 dimensions for LSA
     lsa = make_pipeline(svd, Normalizer(copy=False))
 
     # Run SVD on the training data, then project the training data.

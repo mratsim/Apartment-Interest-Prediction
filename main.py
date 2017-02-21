@@ -6,6 +6,7 @@ import pandas as pd
 
 # feature preprocessing
 from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder, LabelEncoder, LabelBinarizer
+from sklearn.decomposition import TruncatedSVD
 
 # Custom helper functions
 from src.star_command import feat_extraction_pipe
@@ -42,7 +43,7 @@ idx_test = df_test['listing_id']
 # Distance par rapport au centre
 # Clusteriser la latitude/longitude
 # manager skill (2*high + medium)
-# TFIDF - Naive Bayes
+# TFIDF - Naive Bayes and/or SVM
 
 #######################
 
@@ -77,13 +78,25 @@ select_feat = [
     (["Created_Day"],None),
     (["Created_Hour"],None),
     (["Created_DayOfWeek"],None),
-    #("tfidf_high",None),
+    ("tfidf_high",None),
     #("tfidf_medium",None),
-    #("tfidf_low",None),
-    ("display_address",LabelBinarizer(sparse_output=True)),
-    ("manager_id",LabelBinarizer(sparse_output=True)),
-    ("building_id",LabelBinarizer(sparse_output=True)),
-    ("street_address",LabelBinarizer(sparse_output=True))
+    ("tfidf_low",None),
+    ("display_address",[
+        LabelBinarizer(sparse_output=True), 
+        TruncatedSVD(7)
+    ]),
+    ("manager_id",[
+        LabelBinarizer(sparse_output=True), 
+        TruncatedSVD(7)
+    ]),
+    ("building_id",[
+        LabelBinarizer(sparse_output=True), 
+        TruncatedSVD(7)
+    ]),
+    ("street_address",[
+        LabelBinarizer(sparse_output=True), 
+        TruncatedSVD(7)
+    ]),
 ]
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer
