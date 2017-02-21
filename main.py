@@ -6,6 +6,7 @@ import pandas as pd
 
 # feature preprocessing
 from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder, LabelEncoder, LabelBinarizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import TruncatedSVD
 
 # Custom helper functions
@@ -53,6 +54,7 @@ from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
+from src.transformers_appart_features import tr_tfidf_features
 
 # Feature engineering - sequence of transformations
 tr_pipeline = feat_extraction_pipe(
@@ -60,7 +62,8 @@ tr_pipeline = feat_extraction_pipe(
     tr_numfeat,
     tr_numdescwords,
     tr_datetime,
-    tr_tfidf_lsa_lgb
+    tr_tfidf_lsa_lgb,
+    tr_tfidf_features
     #tr_dumpcsv
 )
 
@@ -86,8 +89,7 @@ select_feat = [
         TruncatedSVD(7)
     ]),
     ("manager_id",[
-        LabelBinarizer(sparse_output=True), 
-        TruncatedSVD(7)
+        LabelBinarizer(sparse_output=True)
     ]),
     ("building_id",[
         LabelBinarizer(sparse_output=True), 
@@ -97,6 +99,7 @@ select_feat = [
         LabelBinarizer(sparse_output=True), 
         TruncatedSVD(7)
     ]),
+    ("joined_features", TfidfVectorizer(ngram_range=(1, 1)))
 ]
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer
