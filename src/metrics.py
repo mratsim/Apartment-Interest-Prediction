@@ -2,7 +2,7 @@ import numpy as np
 from numba import autojit
 
 # Metric Multiclass log loss
-@autojit(nogil=True,cache=True)
+# @autojit(nogil=True,cache=True)
 def mlogloss(y_true, y_pred, eps=1e-15):
     """Multi class version of Logarithmic Loss metric.
     https://www.kaggle.com/wiki/MultiClassLogLoss

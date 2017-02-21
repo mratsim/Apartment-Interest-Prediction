@@ -45,12 +45,12 @@ def _concat_col(*list_of_arrays):
 def feat_extraction_pipe(*funcs):
     return compose(*reversed(funcs))
 
-def feat_selection(ft_selection, df_train, df_val, df_test, out_type=None):
+def feat_selection(ft_selection, df_train, df_val, df_test, y=None,out_type=None):
     trn = df_train.copy()
     val = df_val.copy()
     tst = df_test.copy()
     
-    ft_selection = [(trn,val,tst,label,transfo) for (label,transfo) in ft_selection]
+    ft_selection = [(trn,val,tst,label, y,transfo) for (label,transfo) in ft_selection]
     
     if out_type == 'dataframe':
         tuples_trn_val_test = starmap(_feat_transfo_df, ft_selection)
@@ -67,27 +67,28 @@ def _list_to_pipe_transformer(transformers):
         transformers = make_pipeline(*transformers)
     return transformers
 
-def _feat_transfo(train, valid, test, sCol, Transformer=None):
+def _feat_transfo(train, valid, test, sCol, y=None, Transformer=None):
     if Transformer is None:
+        #make sure we return the same whether its "feature" or ["feature"]
         return (train[sCol].values, valid[sCol].values, test[sCol].values)
     
     Transformer = _list_to_pipe_transformer(Transformer)
     
-    trn = Transformer.fit_transform(train[sCol])
-    val = Transformer.transform(valid[sCol])
-    tst = Transformer.transform(test[sCol])
+    trn = Transformer.fit_transform(train[sCol].values,y)
+    val = Transformer.transform(valid[sCol].values)
+    tst = Transformer.transform(test[sCol].values)
     
     return (trn, val, tst)
       
-def _feat_transfo_df(train,valid, test,sCol,Transformer=None):
+def _feat_transfo_df(train,valid, test, sCol, y=None, Transformer=None):
     if Transformer is None:
         return (train[sCol], valid[sCol], test[sCol])
     
     Transformer = _list_to_pipe_transformer(Transformer)
 
-    def _trans(df, sCol, Transformer,flag):
+    def _trans(df, sCol, y, Transformer,flag):
         if flag == "fit_transform":
-            transformed = Transformer.fit_transform(df[sCol]).T
+            transformed = Transformer.fit_transform(df[sCol], y).T
         elif flag == "transform":
             transformed = Transformer.transform(df[sCol]).T
         #else Raise exception
@@ -114,9 +115,9 @@ def _feat_transfo_df(train,valid, test,sCol,Transformer=None):
             feature_list.append(feat_label)
         return df[feature_list]
     
-    trn = _trans(train, sCol, Transformer,'fit_transform')
-    val = _trans(valid, sCol, Transformer,'transform')
-    tst = _trans(test, sCol, Transformer,'transform')
+    trn = _trans(train, y, sCol, Transformer,'fit_transform')
+    val = _trans(valid, y, sCol, Transformer,'transform')
+    tst = _trans(test, y, sCol, Transformer,'transform')
 
     return (trn, val, tst)
 

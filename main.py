@@ -5,15 +5,25 @@ import numpy as np
 import pandas as pd
 
 # feature preprocessing
-from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder, LabelEncoder, LabelBinarizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import TruncatedSVD
+from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction import FeatureHasher
+from sklearn.metrics import make_scorer
+
+
+#Dimensionality reduction
+from sklearn.decomposition import TruncatedSVD, NMF
+
+# feature selection
+# from sklearn.feature_selection import SelectFromModel, RFECV
+# from sklearn.model_selection import StratifiedKFold
 
 # Custom helper functions
 from src.star_command import feat_extraction_pipe
 from main_output import output
-from main_train import train_lgb
+from main_train import training_step
 from src.preprocessing import preprocessing
+from src.metrics import mlogloss
 
 # Mesure time
 from timeit import default_timer as timer
@@ -56,7 +66,7 @@ from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.transformers_appart_features import tr_tfidf_features
 
-# Feature engineering - sequence of transformations
+# Feature extraction - sequence of transformations
 tr_pipeline = feat_extraction_pipe(
     tr_numphot,
     tr_numfeat,
@@ -66,6 +76,8 @@ tr_pipeline = feat_extraction_pipe(
     tr_tfidf_features
     #tr_dumpcsv
 )
+
+mlog_score = make_scorer(mlogloss, greater_is_better=False,needs_proba=True)
 
 # Feature selection - features to keep
 select_feat = [
@@ -81,25 +93,24 @@ select_feat = [
     (["Created_Day"],None),
     (["Created_Hour"],None),
     (["Created_DayOfWeek"],None),
-    ("tfidf_high",None),
+    #("tfidf_high",None),
     #("tfidf_medium",None),
-    ("tfidf_low",None),
+    #("tfidf_low",None),
     ("display_address",[
-        LabelBinarizer(sparse_output=True), 
-        TruncatedSVD(7)
+        CountVectorizer(),
+        NMF(n_components=7)
     ]),
     ("manager_id",[
-        LabelBinarizer(sparse_output=True)
+        CountVectorizer(),
+        NMF(n_components=7)
     ]),
     ("building_id",[
-        LabelBinarizer(sparse_output=True), 
-        TruncatedSVD(7)
+        CountVectorizer(),
+        NMF(n_components=7)
     ]),
-    ("street_address",[
-        LabelBinarizer(sparse_output=True), 
-        TruncatedSVD(7)
-    ]),
-    ("joined_features", TfidfVectorizer(ngram_range=(1, 1)))
+    #("joined_features", TfidfVectorizer(ngram_range=(1, 1)))
+    ("joined_features", CountVectorizer( ngram_range=(1, 2),
+                                        stop_words='english'))
 ]
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer
@@ -112,10 +123,10 @@ x_trn, x_val, y_trn, y_val, X_test, labelencoder = preprocessing(
 
 ############ Train and Validate ####################
 print("############ Final Classifier ######################")
-gbm, metric = train_lgb(x_trn, x_val, y_trn, y_val)
+clf, metric = training_step(x_trn, x_val, y_trn, y_val)
 
 ################## Predict #########################
-output(X_test,idx_test,gbm,labelencoder, metric)
+output(X_test,idx_test,clf,labelencoder, metric)
 
 end_time = timer()
 print("################## Success #########################")

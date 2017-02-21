@@ -9,6 +9,8 @@ def output(X_test, listing_id, classifier, LabelEncoder, metric):
     # print(X_test.dtypes)
     
     predictions = classifier.predict(X_test, num_iteration=classifier.best_iteration)
+    # predictions = classifier.predict(X_test, ntree_limit=classifier.best_ntree_limit)
+
     
     #debug
     print('\n\nPredictions done. Here is a snippet')
