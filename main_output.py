@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import xgboost as xgb
 
 ####### Predict and format output #######
 def output(X_test, listing_id, classifier, LabelEncoder, metric):
@@ -8,8 +9,11 @@ def output(X_test, listing_id, classifier, LabelEncoder, metric):
     # print('Type of data - Test - check especially for categorical')
     # print(X_test.dtypes)
     
+    # LightGBM
     # predictions = classifier.predict(X_test, num_iteration=classifier.best_iteration)
-    predictions = classifier.predict(X_test, ntree_limit=classifier.best_ntree_limit)
+    
+    xgtest = xgb.DMatrix(X_test)
+    predictions = classifier.predict(xgtest, ntree_limit=classifier.best_ntree_limit)
 
     
     #debug

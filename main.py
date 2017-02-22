@@ -5,11 +5,8 @@ import numpy as np
 import pandas as pd
 
 # feature preprocessing
-from sklearn.preprocessing import RobustScaler,StandardScaler, OneHotEncoder
+from sklearn.preprocessing import Normalizer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.feature_extraction import FeatureHasher
-from sklearn.metrics import make_scorer
-
 
 #Dimensionality reduction
 from sklearn.decomposition import TruncatedSVD, NMF
@@ -47,7 +44,7 @@ y = df_train['interest_level']
 idx_test = df_test['listing_id']
 
 ###### TODO ###########
-# Bucket nombre de chambres et de bathrooms
+# Bucket nombre de chambres et de bathrooms - DONE display addresse
 # Retirer numéro de rue - DONE ?
 # Imputer les rues sans géoloc
 # Quartier (centre le plus proche)
@@ -65,6 +62,7 @@ from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.transformers_appart_features import tr_tfidf_features
+from src.transformers_categorical import tr_managerskill
 
 # Feature extraction - sequence of transformations
 tr_pipeline = feat_extraction_pipe(
@@ -72,12 +70,11 @@ tr_pipeline = feat_extraction_pipe(
     tr_numfeat,
     tr_numdescwords,
     tr_datetime,
-    tr_tfidf_lsa_lgb,
+    #tr_tfidf_lsa_lgb
+    tr_managerskill,
     tr_tfidf_features
     #tr_dumpcsv
 )
-
-mlog_score = make_scorer(mlogloss, greater_is_better=False,needs_proba=True)
 
 # Feature selection - features to keep
 select_feat = [
@@ -102,9 +99,18 @@ select_feat = [
     ("street_address",CountVectorizer()),
     ("manager_id",CountVectorizer()),
     ("building_id",CountVectorizer()),
+    ("Percent_manager_high",None),
+    ("Percent_manager_low",None),
+    ("Percent_manager_medium",None),
     ("joined_features", CountVectorizer( ngram_range=(1, 1),
-                                        stop_words='english',
-                                        max_features=200))
+                                       stop_words='english',
+                                       max_features=200)),
+    #("description", [TfidfVectorizer(max_features=2**16,
+    #                         min_df=2, stop_words='english',
+    #                         use_idf=True),
+    #                TruncatedSVD(100),
+    #                Normalizer(copy=False)]
+    #)
 ]
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer

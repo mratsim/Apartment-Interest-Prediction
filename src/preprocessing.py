@@ -5,12 +5,14 @@ from src.star_command import feat_selection
 def preprocessing(X_train, X_test, y_train, tr_pipeline, select_feat, cache_file):
     # Engineer features
     X_train, X_test, _, _ = tr_pipeline(X_train,X_test, y_train, cache_file)
-
+    
     # Create a validation set
     x_trn, x_val, y_trn, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
 
     # Select features 
     x_trn, x_val, x_test = feat_selection(select_feat, x_trn, x_val, X_test, y_trn)
+    
+    print('X_train has', X_train.shape[1], 'features')
     
     # Encode y labels to integers
     le = LabelEncoder()
