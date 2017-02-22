@@ -5,12 +5,13 @@ from src.metrics import mlogloss
 
 def training_step(x_trn, x_val, y_trn, y_val):
     
-    # clf, y_pred = _clf_xgb(x_trn, x_val, y_trn, y_val)
-    clf, y_pred = _clf_lgb(x_trn, x_val, y_trn, y_val)
+    clf, y_pred = _clf_xgb(x_trn, x_val, y_trn, y_val)
+    # clf, y_pred = _clf_lgb(x_trn, x_val, y_trn, y_val)
 
     # eval
     metric = mlogloss(y_val, y_pred)
-    # print('We stopped at boosting round: ', gbm.best_iteration)
+    # print('We stopped at boosting round: ', clf.best_iteration)
+    print('We stopped at boosting round: ', clf.best_ntree_limit)
     print('The mlogloss of prediction is: ', metric)
     return clf, metric
 
@@ -29,10 +30,11 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
         'objective': 'multiclass',
         'num_class': 3,
         'metric': {'multi_logloss'},
-        'learning_rate': 0.01,
-        'feature_fraction': 0.7,
-        'bagging_fraction': 0.8,
-        'bagging_freq': 5,
+        'learning_rate': 0.1,
+        'feature_fraction': 0.8,
+        #'bagging_fraction': 0.8,
+        'max_depth': 6,
+        'bagging_freq': 0,
         'verbose': 0
     }
 
@@ -43,7 +45,7 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
                     num_boost_round=2048,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=50,
-                    verbose_eval=False,
+                    verbose_eval=True,
                     feature_name='auto')
     
     print('Start validating...')

@@ -88,29 +88,23 @@ select_feat = [
     (["price"],None),
     (["NumDescWords"],None),
     (["NumFeat"],None),
-#    ("Created_Year",None), #Every listing is 2016
+    (["NumPhotos"],None),
+    ("Created_Year",None), #Every listing is 2016
     (["Created_Month"],None),
     (["Created_Day"],None),
     (["Created_Hour"],None),
-    (["Created_DayOfWeek"],None),
+    ('listing_id',None),
+    #(["Created_DayOfWeek"],None),
     #("tfidf_high",None),
     #("tfidf_medium",None),
     #("tfidf_low",None),
-    ("display_address",[
-        CountVectorizer(),
-        NMF(n_components=7)
-    ]),
-    ("manager_id",[
-        CountVectorizer(),
-        NMF(n_components=7)
-    ]),
-    ("building_id",[
-        CountVectorizer(),
-        NMF(n_components=7)
-    ]),
-    #("joined_features", TfidfVectorizer(ngram_range=(1, 1)))
-    ("joined_features", CountVectorizer( ngram_range=(1, 2),
-                                        stop_words='english'))
+    ("display_address",CountVectorizer()),
+    ("street_address",CountVectorizer()),
+    ("manager_id",CountVectorizer()),
+    ("building_id",CountVectorizer()),
+    ("joined_features", CountVectorizer( ngram_range=(1, 1),
+                                        stop_words='english',
+                                        max_features=200))
 ]
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer
