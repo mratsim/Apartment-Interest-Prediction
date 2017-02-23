@@ -22,6 +22,23 @@ import shelve
 from pickle import HIGHEST_PROTOCOL
 from src.cache import load_from_cache, save_to_cache
 
+def tr_clean_desc(train, test, y, cache_file):
+    def _toBeautifulText(text):
+        bs =BeautifulSoup(text, "html.parser")
+        for br in bs.find_all("br"):
+            br.replace_with(" ")
+        return bs.get_text()
+    
+    trn = train.assign(
+                    CleanDesc = train["description"].apply(lambda x: _toBeautifulText(x))
+                    )
+    tst = test.assign(
+                    CleanDesc = test["description"].apply(lambda x: _toBeautifulText(x))
+                    )
+
+    return trn,tst,y,cache_file
+
+
 # Massive leakage, check cross val predict
 def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     print("############# TF-IDF + LSA step ################")
@@ -39,21 +56,12 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     vectorizer = TfidfVectorizer(max_features=2**16,
                              min_df=2, stop_words='english',
                              use_idf=True)
-    def _preproc(df):
-        def _toBeautifulText(text):
-            bs =BeautifulSoup(text, "html.parser")
-            for br in bs.find_all("br"):
-                br.replace_with(" ")
-            return bs.get_text()
 
-        return df.assign(
-                    RawText = df["description"].apply(lambda x: _toBeautifulText(x))
-                    )
     
-    train_raw = _preproc(train)['RawText']
+    train_raw = tr_clean_desc(train, test, y, cache_file)['RawText']
     train_vect = vectorizer.fit_transform(train_raw)
     
-    test_raw = _preproc(test)['RawText']
+    test_raw = tr_clean_desc(train, test, y, cache_file)['RawText']
     test_vect = vectorizer.transform(test_raw)
     # print(vectorizer.get_feature_names())
     

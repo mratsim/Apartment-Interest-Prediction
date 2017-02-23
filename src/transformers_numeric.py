@@ -23,11 +23,10 @@ def tr_numdescwords(train, test, y, cache_file):
     return _trans(train), _trans(test), y, cache_file
 
 #
-def tr_boxcox_price(train, test, y, cache_file):
+def tr_log_price(train, test, y, cache_file):
     def _trans(df):
-        boxcox_price, _ = boxcox(df['price'])
         return df.assign(
-            bc_price = boxcox_price
+            log_price = np.log(df['price'])
             )
     return _trans(train), _trans(test), y, cache_file
 

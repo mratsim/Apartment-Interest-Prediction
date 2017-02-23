@@ -61,10 +61,11 @@ idx_test = df_test['listing_id']
 
 # # Command Center
 
-from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_boxcox_price, tr_bucket_rooms
+from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_log_price, tr_bucket_rooms
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
-from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
+from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb, tr_clean_desc
+from src.lib_sklearn_transformer_nlp import NLTKPreprocessor
 from src.transformers_appart_features import tr_tfidf_features
 from src.transformers_categorical import tr_managerskill
 
@@ -76,11 +77,18 @@ tr_pipeline = feat_extraction_pipe(
     tr_datetime,
     tr_tfidf_lsa_lgb,
     tr_managerskill,
-    tr_boxcox_price,
+    tr_log_price,
     tr_bucket_rooms,
-    tr_tfidf_features
+    tr_tfidf_features,
+    tr_clean_desc
     #tr_dumpcsv
 )
+
+def identity(arg):
+    """
+    Simple identity function works as a passthrough.
+    """
+    return arg
 
 # Feature selection - features to keep
 select_feat = [
@@ -90,8 +98,8 @@ select_feat = [
     ('bucket_bed',None),
     (["latitude"],None),
     (["longitude"],None),
-    ('bc_price',None),
-    #(["price"],None),
+    #('log_price',None),
+    (["price"],None),
     #(["NumDescWords"],None),
     #(["NumFeat"],None),
     (["NumPhotos"],None),
@@ -123,7 +131,12 @@ select_feat = [
     #                TruncatedSVD(100),
     #                Normalizer(copy=False)]
     #)
+    ("CleanDesc",[NLTKPreprocessor(),
+                    TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]
+    )
 ]
+                    
+
 
 # Currently LightGBM core dumps on categorical data, deactivate in the transformer
 
