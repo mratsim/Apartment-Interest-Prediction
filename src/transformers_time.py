@@ -11,6 +11,8 @@ def tr_datetime(train,test, y, cache_file):
             Created_Month = df["Created_TS"].dt.month,
             Created_Day = df["Created_TS"].dt.day,
             Created_Hour = df["Created_TS"].dt.hour,
-            Created_DayOfWeek = df["Created_TS"].dt.dayofweek
+            Created_DayOfWeek = df["Created_TS"].dt.dayofweek,
+            Created_DayOfYear = df["Created_TS"].dt.dayofyear,
+            Created_WeekOfYear = df["Created_TS"].dt.weekofyear
             )
     return _trans(train), _trans(test), y, cache_file

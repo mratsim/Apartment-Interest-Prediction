@@ -52,12 +52,16 @@ idx_test = df_test['listing_id']
 # Clusteriser la latitude/longitude
 # manager skill (2*high + medium)
 # TFIDF - Naive Bayes and/or SVM
+# Tout passer en minuscule
+# Remplacer les ave par avenue, n par north etc
+# Redacted dans la website description (sauf si beautiful soup le fait)
+# Building interest
 
 #######################
 
 # # Command Center
 
-from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords
+from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_boxcox_price, tr_bucket_rooms
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
@@ -70,28 +74,35 @@ tr_pipeline = feat_extraction_pipe(
     tr_numfeat,
     tr_numdescwords,
     tr_datetime,
-    #tr_tfidf_lsa_lgb
+    tr_tfidf_lsa_lgb,
     tr_managerskill,
+    tr_boxcox_price,
+    tr_bucket_rooms,
     tr_tfidf_features
     #tr_dumpcsv
 )
 
 # Feature selection - features to keep
 select_feat = [
-    ("bathrooms",None),
-    (["bedrooms"],None),
+    #("bathrooms",None),
+    ("bucket_bath",None),
+    #(["bedrooms"],None),
+    ('bucket_bed',None),
     (["latitude"],None),
     (["longitude"],None),
-    (["price"],None),
-    (["NumDescWords"],None),
-    (["NumFeat"],None),
+    ('bc_price',None),
+    #(["price"],None),
+    #(["NumDescWords"],None),
+    #(["NumFeat"],None),
     (["NumPhotos"],None),
-    ("Created_Year",None), #Every listing is 2016
+    #("Created_Year",None), #Every listing is 2016
     (["Created_Month"],None),
     (["Created_Day"],None),
     (["Created_Hour"],None),
     ('listing_id',None),
     #(["Created_DayOfWeek"],None),
+    ('Created_DayOfYear',None),
+    ('Created_WeekOfYear',None),
     #("tfidf_high",None),
     #("tfidf_medium",None),
     #("tfidf_low",None),
@@ -99,9 +110,10 @@ select_feat = [
     ("street_address",CountVectorizer()),
     ("manager_id",CountVectorizer()),
     ("building_id",CountVectorizer()),
-    ("Percent_manager_high",None),
-    ("Percent_manager_low",None),
-    ("Percent_manager_medium",None),
+    #('mngr_percent_high',None),
+    #('mngr_percent_low',None),
+    #('mngr_percent_medium',None),
+    ('mngr_skill',None),
     ("joined_features", CountVectorizer( ngram_range=(1, 1),
                                        stop_words='english',
                                        max_features=200)),
@@ -123,10 +135,10 @@ x_trn, x_val, y_trn, y_val, X_test, labelencoder = preprocessing(
 
 ############ Train and Validate ####################
 print("############ Final Classifier ######################")
-clf, metric = training_step(x_trn, x_val, y_trn, y_val)
+clf, metric, n_stop = training_step(x_trn, x_val, y_trn, y_val)
 
 ################## Predict #########################
-output(X_test,idx_test,clf,labelencoder, metric)
+output(X_test,idx_test,clf,labelencoder, n_stop, metric)
 
 end_time = timer()
 print("################## Success #########################")

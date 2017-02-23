@@ -5,15 +5,25 @@ from src.metrics import mlogloss
 
 def training_step(x_trn, x_val, y_trn, y_val):
     
-    clf, y_pred = _clf_xgb(x_trn, x_val, y_trn, y_val)
-    # clf, y_pred = _clf_lgb(x_trn, x_val, y_trn, y_val)
+    clf, y_pred, params, n_stop = _clf_xgb(x_trn, x_val, y_trn, y_val)
+    #clf, y_pred, params, n_stop = _clf_lgb(x_trn, x_val, y_trn, y_val)
 
     # eval
     metric = mlogloss(y_val, y_pred)
-    # print('We stopped at boosting round: ', clf.best_iteration)
-    print('We stopped at boosting round: ', clf.best_ntree_limit)
+    print('We stopped at boosting round: ', n_stop)
     print('The mlogloss of prediction is: ', metric)
-    return clf, metric
+    
+    
+    #print('Start Training on the whole dataset...')
+    #xgtrain = xgb.DMatrix(x_trn, label=y_trn)
+    #final_clf = xgb.train(params, xgtrain, n_stop)
+    
+    
+    
+    #lgb_train = lgb.Dataset(X, y)
+    #lgb.train(params, lgb_train, num_boost_round=n_stop)
+    
+    return clf, metric, n_stop
 
 
 def _clf_lgb(x_trn, x_val, y_trn, y_val):
@@ -38,7 +48,7 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
         'verbose': 0
     }
 
-    print('Start training...')
+    print('Start Validation on 80% of the dataset...')
     # train
     gbm = lgb.train(params,
                     lgb_train,
@@ -51,7 +61,7 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
     print('Start validating...')
     # predict
     y_pred = gbm.predict(x_val, num_iteration=gbm.best_iteration)
-    return gbm, y_pred
+    return gbm, y_pred, params, gbm.best_iteration
 
 def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rounds=1000):
     param = {}
@@ -79,4 +89,4 @@ def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rou
     print('Start validating...')
     # predict
     y_pred = model.predict(xgtest, ntree_limit=model.best_ntree_limit)
-    return model, y_pred
+    return model, y_pred, plst, model.best_ntree_limit
