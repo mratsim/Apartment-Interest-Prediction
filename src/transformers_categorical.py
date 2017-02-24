@@ -64,3 +64,20 @@ def tr_managerskill(train, test, y, cache_file):
                                     'mngr_skill']]  = mean_val.values
 
     return trn, tst, y, cache_file
+
+
+#############
+# Bins managers and building
+def tr_bin_buildings_mngr(train, test, y, cache_file):
+    def _trans(df):
+        return df.assign(
+            #duplicates = drop avoids error whena single value would need to appear in 2 different bins
+            #It needs pandas version>=20.0
+            #It's probably better to cut by value if distrbution between training and tests are different
+            
+            Bin_Buildings = pd.qcut(df['building_id'].value_counts(), 30, labels=False,duplicates='drop'),
+            Bin_Managers = pd.qcut(df['manager_id'].value_counts(), 30, labels=False, duplicates='drop')
+            )
+    # Since we don't use y, there shouldn't be leakage if we use the total count train + test.
+    return _trans(train), _trans(test), y, cache_file
+    

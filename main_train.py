@@ -3,7 +3,7 @@ import lightgbm as lgb
 import xgboost as xgb
 from src.metrics import mlogloss
 
-def training_step(x_trn, x_val, y_trn, y_val):
+def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
     
     clf, y_pred, params, n_stop = _clf_xgb(x_trn, x_val, y_trn, y_val)
     #clf, y_pred, params, n_stop = _clf_lgb(x_trn, x_val, y_trn, y_val)
@@ -14,16 +14,16 @@ def training_step(x_trn, x_val, y_trn, y_val):
     print('The mlogloss of prediction is: ', metric)
     
     
-    #print('Start Training on the whole dataset...')
-    #xgtrain = xgb.DMatrix(x_trn, label=y_trn)
-    #final_clf = xgb.train(params, xgtrain, n_stop)
+    print('Start Training on the whole dataset...')
+    xgtrain = xgb.DMatrix(X_train, label=y_train)
+    final_clf = xgb.train(params, xgtrain, n_stop)
     
     
     
-    #lgb_train = lgb.Dataset(X, y)
-    #lgb.train(params, lgb_train, num_boost_round=n_stop)
+    #lgb_train = lgb.Dataset(X_train, y_train)
+    #final_clf = lgb.train(params, lgb_train, num_boost_round=n_stop)
     
-    return clf, metric, n_stop
+    return final_clf, metric, n_stop
 
 
 def _clf_lgb(x_trn, x_val, y_trn, y_val):
@@ -58,7 +58,7 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
                     verbose_eval=True,
                     feature_name='auto')
     
-    print('Start validating...')
+    print('Start validating prediction on 20% unseen data')
     # predict
     y_pred = gbm.predict(x_val, num_iteration=gbm.best_iteration)
     return gbm, y_pred, params, gbm.best_iteration
@@ -81,12 +81,13 @@ def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rou
     xgtrain = xgb.DMatrix(x_trn, label=y_trn)
     xgtest = xgb.DMatrix(x_val, label=y_val)
     
-    print('Start training...')
+    print('Start Validation on 80% of the dataset...')
     # train
     watchlist = [ (xgtrain,'train'), (xgtest, 'test') ]
     model = xgb.train(plst, xgtrain, num_rounds, watchlist, early_stopping_rounds=20)
 
-    print('Start validating...')
+    print('Start validating prediction on 20% unseen data')
     # predict
     y_pred = model.predict(xgtest, ntree_limit=model.best_ntree_limit)
+
     return model, y_pred, plst, model.best_ntree_limit

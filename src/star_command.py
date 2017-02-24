@@ -45,44 +45,42 @@ def _concat_col(*list_of_arrays):
 def feat_extraction_pipe(*funcs):
     return compose(*reversed(funcs))
 
-def feat_selection(ft_selection, df_train, df_val, df_test, y=None,out_type=None):
+def feat_selection(ft_selection, df_train, df_val_test, y=None,out_type=None):
     trn = df_train.copy()
-    val = df_val.copy()
-    tst = df_test.copy()
+    valtst = df_val_test.copy()
     
-    ft_selection = [(trn,val,tst,label, y,transfo) for (label,transfo) in ft_selection]
+    ft_selection = [(trn,valtst,label, y,transfo) for (label,transfo) in ft_selection]
     
     if out_type == 'dataframe':
         tuples_trn_val_test = starmap(_feat_transfo_df, ft_selection)
-        trn, val, tst = zip_with(_concat_col_pd, tuples_trn_val_test)
+        trn, valtst = zip_with(_concat_col_pd, tuples_trn_val_test)
         
     else:
         tuples_trn_val_test = starmap(_feat_transfo, ft_selection)
-        trn, val, tst = zip_with(_concat_col, tuples_trn_val_test)
-        
-    return trn, val, tst
+        trn, valtst = zip_with(_concat_col, tuples_trn_val_test)
+  
+    return trn, valtst
 
 def _list_to_pipe_transformer(transformers):
     if isinstance(transformers, list):
         transformers = make_pipeline(*transformers)
     return transformers
 
-def _feat_transfo(train, valid, test, sCol, y=None, Transformer=None):
+def _feat_transfo(train, val_test, sCol, y=None, Transformer=None):
     if Transformer is None:
         #make sure we return the same whether its "feature" or ["feature"]
-        return (train[sCol].values, valid[sCol].values, test[sCol].values)
+        return (train[sCol].values, val_test[sCol].values)
     
     Transformer = _list_to_pipe_transformer(Transformer)
     
     trn = Transformer.fit_transform(train[sCol].values,y)
-    val = Transformer.transform(valid[sCol].values)
-    tst = Transformer.transform(test[sCol].values)
+    valtst = Transformer.transform(val_test[sCol].values)
     
-    return (trn, val, tst)
+    return (trn, valtst)
       
-def _feat_transfo_df(train,valid, test, sCol, y=None, Transformer=None):
+def _feat_transfo_df(train,val_test, sCol, y=None, Transformer=None):
     if Transformer is None:
-        return (train[sCol], valid[sCol], test[sCol])
+        return (train[sCol], val_test[sCol])
     
     Transformer = _list_to_pipe_transformer(Transformer)
 
@@ -116,10 +114,9 @@ def _feat_transfo_df(train,valid, test, sCol, y=None, Transformer=None):
         return df[feature_list]
     
     trn = _trans(train, y, sCol, Transformer,'fit_transform')
-    val = _trans(valid, y, sCol, Transformer,'transform')
-    tst = _trans(test, y, sCol, Transformer,'transform')
+    valtst = _trans(val_test, y, sCol, Transformer,'transform')
 
-    return (trn, val, tst)
+    return (trn, valtst)
 
 ######################################
 # Multiprocessing function

@@ -9,15 +9,18 @@ def preprocessing(X_train, X_test, y_train, tr_pipeline, select_feat, cache_file
     # Create a validation set
     x_trn, x_val, y_trn, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
 
-    # Select features 
-    x_trn, x_val, x_test = feat_selection(select_feat, x_trn, x_val, X_test, y_trn)
+    # Select features - validation
+    x_trn, x_val = feat_selection(select_feat, x_trn, x_val, y_trn)
     
+    # Select features - prediction
+    X_train, X_test = feat_selection(select_feat, X_train, X_test, y_train)
+
     print('X_train has', X_train.shape[1], 'features')
     
     # Encode y labels to integers
     le = LabelEncoder()
-    le.fit(y_train)
+    y = le.fit_transform(y_train)
     y_trn = le.transform(y_trn)
     y_val = le.transform(y_val)
     
-    return x_trn, x_val, y_trn, y_val, x_test, le
+    return x_trn, x_val, y_trn, y_val, le, X_train, X_test, y
