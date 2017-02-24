@@ -3,6 +3,12 @@ import numpy as np
 
 # This transformer extracts the date/month/year and timestamp in a neat package
 def tr_datetime(train,test, y, cache_file):
+    def _isWeekend(i):
+        if i in [5,6]:
+            return 1
+        else:
+            return 0
+        
     def _trans(df):
         df = df.assign(
             Created_TS = pd.to_datetime(df["created"])
@@ -23,7 +29,8 @@ def tr_datetime(train,test, y, cache_file):
             Created_DoY_cos = np.cos(((df["Created_TS"].dt.dayofyear -1)/365)*2*np.pi),
             Created_DoY_sin = np.sin(((df["Created_TS"].dt.dayofyear -1)/365)*2*np.pi),
             Created_WoY_cos = np.cos(((df["Created_TS"].dt.weekofyear -1)/52)*2*np.pi),
-            Created_WoY_sin = np.sin(((df["Created_TS"].dt.weekofyear -1)/52)*2*np.pi)
+            Created_WoY_sin = np.sin(((df["Created_TS"].dt.weekofyear -1)/52)*2*np.pi),
+            Created_Weekend = df["Created_TS"].dt.dayofyear.apply(_isWeekend)
             
             )
     return _trans(train), _trans(test), y, cache_file

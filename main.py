@@ -94,6 +94,41 @@ def identity(arg):
     """
     return arg
 
+#can't bag plurals with singular
+vocab_metro = {
+    'metro':0,
+    'metros':1,
+    'train':2,
+    'trains':3,
+    'line':4,
+    'lines':5, 
+}
+vocab_metro_lines = {
+    '1':0,
+    '2':1,
+    '3':2,
+    '4':3,
+    '5':4,
+    '6':5,
+    '7':6,
+    'A':7,
+    'C':8,
+    'E':9,
+    'B':10,
+    'D':11,
+    'F':12,
+    'M':13,
+    'G':14,
+    'J':15,
+    'Z':16,
+    'L':17,
+    'S':18,
+    'N':19,
+    'Q':20,
+    'R':21,
+    'W':22
+}
+
 # Feature selection - features to keep
 select_feat = [
     ("bathrooms",None),
@@ -123,11 +158,12 @@ select_feat = [
     #('Created_DoY_sin',None),
     #('Created_WoY_cos',None),
     #('Created_WoY_sin',None),
+    ('Created_Weekend',None),
     ("tfidf_high",None),
     ("tfidf_medium",None),
     ("tfidf_low",None),
     ("display_address",CountVectorizer()),
-    ("street_address",CountVectorizer()),
+    #("street_address",CountVectorizer()),
     ("manager_id",CountVectorizer()),
     ("building_id",CountVectorizer()),
     ('mngr_percent_high',None),
@@ -136,7 +172,7 @@ select_feat = [
     ('mngr_skill',None),
     ('Bin_Buildings',None),
     ('Bin_Managers',None),
-    ("joined_features", CountVectorizer( ngram_range=(1, 1),
+    ("joined_features", CountVectorizer( ngram_range=(1, 2),
                                        stop_words='english',
                                        max_features=200)),
     #("description", [TfidfVectorizer(max_features=2**16,
@@ -148,6 +184,8 @@ select_feat = [
     #("CleanDesc",[HTMLPreprocessor(),NLTKPreprocessor(),
     #                TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]
     #)
+    ("description", CountVectorizer(vocabulary=vocab_metro,binary=True)),
+    #("description", CountVectorizer(vocabulary=vocab_metro_lines,binary=True, lowercase=False))
 ]
                     
 
