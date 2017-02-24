@@ -10,17 +10,22 @@ def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
 
     # eval
     metric = mlogloss(y_val, y_pred)
-    print('We stopped at boosting round: ', n_stop)
+    print('\n\nWe stopped at boosting round: ', n_stop)
     print('The mlogloss of prediction is: ', metric)
-    
-    
-    print('Start Training on the whole dataset...')
-    xgtrain = xgb.DMatrix(X_train, label=y_train)
-    final_clf = xgb.train(params, xgtrain, n_stop)
     
     
     
     #lgb_train = lgb.Dataset(X_train, y_train)
+    xgtrain = xgb.DMatrix(X_train, label=y_train)
+
+    
+    print('\n\nCross validating on 33% of the dataset...')
+    #print(lgb.cv(params, lgb_train, n_stop, nfold=3, seed=1337))
+    print(xgb.cv(params, xgtrain, n_stop, nfold=3, seed=1337))
+    
+    print('\n\nStart Training on the whole dataset...')
+    
+    final_clf = xgb.train(params, xgtrain, n_stop)
     #final_clf = lgb.train(params, lgb_train, num_boost_round=n_stop)
     
     return final_clf, metric, n_stop

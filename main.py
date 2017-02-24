@@ -24,6 +24,7 @@ from src.metrics import mlogloss
 
 # Mesure time
 from timeit import default_timer as timer
+import time
 
 # Set random seed for reproducibility
 np.random.seed(1337)
@@ -56,6 +57,9 @@ idx_test = df_test['listing_id']
 # Remplacer les ave par avenue, n par north etc
 # Redacted dans la website description (sauf si beautiful soup le fait)
 # Building interest
+# lignes de métro: A,C,E,L,1,2,3 trains
+# Rounding floats to reduce noise
+# Extract toilets
 
 #######################
 
@@ -64,8 +68,8 @@ idx_test = df_test['listing_id']
 from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_log_price, tr_bucket_rooms
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
-from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb, tr_clean_desc
-from src.lib_sklearn_transformer_nlp import NLTKPreprocessor
+from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
+from src.lib_sklearn_transformer_nlp import NLTKPreprocessor, HTMLPreprocessor
 from src.transformers_appart_features import tr_tfidf_features
 from src.transformers_categorical import tr_managerskill, tr_bin_buildings_mngr
 
@@ -81,7 +85,6 @@ tr_pipeline = feat_extraction_pipe(
     tr_bucket_rooms,
     tr_bin_buildings_mngr,
     tr_tfidf_features
-    #tr_clean_desc
     #tr_dumpcsv
 )
 
@@ -101,10 +104,10 @@ select_feat = [
     (["longitude"],None),
     #('log_price',None),
     (["price"],None),
-    #(["NumDescWords"],None),
-    #(["NumFeat"],None),
+    (["NumDescWords"],None),
+    (["NumFeat"],None),
     (["NumPhotos"],None),
-    #("Created_Year",None), #Every listing is 2016
+    ("Created_Year",None), #Every listing is 2016
     (["Created_Month"],None),
     (["Created_Day"],None),
     (["Created_Hour"],None),
@@ -135,14 +138,14 @@ select_feat = [
     ('Bin_Managers',None),
     ("joined_features", CountVectorizer( ngram_range=(1, 1),
                                        stop_words='english',
-                                       max_features=200))
+                                       max_features=200)),
     #("description", [TfidfVectorizer(max_features=2**16,
     #                         min_df=2, stop_words='english',
     #                         use_idf=True),
     #                TruncatedSVD(100),
     #                Normalizer(copy=False)]
     #)
-    #("CleanDesc",[NLTKPreprocessor(),
+    #("CleanDesc",[HTMLPreprocessor(),NLTKPreprocessor(),
     #                TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]
     #)
 ]
@@ -164,6 +167,10 @@ clf, metric, n_stop = training_step(x_trn, x_val, y_trn, y_val, X_train, y_train
 
 ################## Predict #########################
 output(X_test,idx_test,clf,labelencoder, n_stop, metric)
+
+with open('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-features.txt', "w") as text_file:
+    for item in select_feat:
+        text_file.write("{}\n".format(item))
 
 end_time = timer()
 print("################## Success #########################")

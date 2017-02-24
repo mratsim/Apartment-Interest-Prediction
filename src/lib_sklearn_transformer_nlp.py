@@ -82,6 +82,6 @@ class HTMLPreprocessor(BaseEstimator,TransformerMixin):
         return bs.get_text()
 
     def transform(self, X):
-        df = pd.DataFrame(X)
-        ##df = df.apply(lambda x: self._toBeautifulText(x))
-        return df
+        s = pd.Series(X)
+        s.apply(lambda x: self._toBeautifulText(x))
+        return s
