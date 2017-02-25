@@ -1,6 +1,8 @@
 from scipy.stats import boxcox
 import numpy as np
 import pandas as pd
+from math import modf
+from sklearn.preprocessing import binarize
 
 # This transformer extracts the number of photos
 def tr_numphot(train, test, y, cache_file):
@@ -40,3 +42,20 @@ def tr_bucket_rooms(train, test, y, cache_file):
             bucket_bed = pd.cut(df['bedrooms'], bins=bed,labels=False, include_lowest=True)
         )
     return _trans(train), _trans(test), y, cache_file
+
+def tr_price_per_room(train, test, y, cache_file): #Assuming always 1 living room
+    def _trans(df):
+        return df.assign(
+            price_per_room = df['price'] / (df['bedrooms'] + 1)
+        )
+    return _trans(train), _trans(test), y, cache_file
+
+def tr_split_bath_toilets(train, test, y, cache_file):
+        def _trans(df):
+            toilets_only, bathrooms_only  = zip(*df['bathrooms'].map(modf))
+            
+            return df.assign(
+                bathrooms_only = list(map(np.int,bathrooms_only)),
+                toilets_only = np.where(np.array(toilets_only)<0, 1, 0)
+            )
+        return _trans(train), _trans(test), y, cache_file

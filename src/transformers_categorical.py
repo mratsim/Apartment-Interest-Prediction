@@ -23,7 +23,18 @@ def _encode_categoricals(train,test, sColumn):
         return df
     return _trans(train, sColumn, le),_trans(test, sColumn, le)
 
-
+def tr_encoded_manager(train, test, y, cache_file):
+    trn, tst = _encode_categoricals(train,test,"manager_id")
+    return trn, tst, y, cache_file
+def tr_encoded_building(train, test, y, cache_file):
+    trn, tst = _encode_categoricals(train,test,"building_id")
+    return trn, tst, y, cache_file
+def tr_encoded_disp_addr(train, test, y, cache_file):
+    trn, tst = _encode_categoricals(train,test,"display_address")
+    return trn, tst, y, cache_file
+def tr_encoded_street_addr(train, test, y, cache_file):
+    trn, tst = _encode_categoricals(train,test,"street_address")
+    return trn, tst, y, cache_file
 
 #############
 # Manager skill

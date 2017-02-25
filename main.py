@@ -5,8 +5,9 @@ import numpy as np
 import pandas as pd
 
 # feature preprocessing
-from sklearn.preprocessing import Normalizer
+from sklearn.preprocessing import Normalizer, OneHotEncoder, Imputer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+import category_encoders as ce
 
 #Dimensionality reduction
 from sklearn.decomposition import TruncatedSVD, NMF
@@ -60,18 +61,24 @@ idx_test = df_test['listing_id']
 # lignes de métro: A,C,E,L,1,2,3 trains
 # Rounding floats to reduce noise
 # Extract toilets
+# price per room
+#  On the Rent Hop website you can notice that when browsing listings only the first two images are displayed. Only when you click on the listing do you see the rest of the images.
+# Size of image (x * x and in MB)
+# Exif
 
 #######################
 
 # # Command Center
 
-from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_log_price, tr_bucket_rooms
+from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_log_price, tr_bucket_rooms, tr_price_per_room, tr_split_bath_toilets
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.lib_sklearn_transformer_nlp import NLTKPreprocessor, HTMLPreprocessor
 from src.transformers_appart_features import tr_tfidf_features
 from src.transformers_categorical import tr_managerskill, tr_bin_buildings_mngr
+from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr
+from src.transformers_geoloc import tr_clustering
 
 # Feature extraction - sequence of transformations
 tr_pipeline = feat_extraction_pipe(
@@ -79,12 +86,20 @@ tr_pipeline = feat_extraction_pipe(
     tr_numfeat,
     tr_numdescwords,
     tr_datetime,
+    tr_split_bath_toilets,
     tr_tfidf_lsa_lgb,
     tr_managerskill,
     #tr_log_price,
-    tr_bucket_rooms,
+    #tr_bucket_rooms,
     tr_bin_buildings_mngr,
-    tr_tfidf_features
+    tr_price_per_room,
+    tr_tfidf_features,
+    tr_encoded_manager,
+    tr_encoded_building,
+    tr_encoded_disp_addr,
+    tr_encoded_street_addr,
+    #tr_clustering,
+    tr_price_per_room
     #tr_dumpcsv
 )
 
@@ -132,13 +147,18 @@ vocab_metro_lines = {
 # Feature selection - features to keep
 select_feat = [
     ("bathrooms",None),
+    #('bathrooms_only',None),
+    ('toilets_only',None),
     #("bucket_bath",None),
     (["bedrooms"],None),
     #('bucket_bed',None),
     (["latitude"],None),
     (["longitude"],None),
+    #("latitude_cluster",None),
+    #("longitude_cluster",None),
     #('log_price',None),
     (["price"],None),
+    ('price_per_room',None),
     (["NumDescWords"],None),
     (["NumFeat"],None),
     (["NumPhotos"],None),
@@ -162,9 +182,13 @@ select_feat = [
     ("tfidf_high",None),
     ("tfidf_medium",None),
     ("tfidf_low",None),
+    ("encoded_display_address",None),
     ("display_address",CountVectorizer()),
+    #("encoded_street_address",None),
     #("street_address",CountVectorizer()),
+    (["encoded_manager_id"],None),
     ("manager_id",CountVectorizer()),
+    (["encoded_building_id"],None),
     ("building_id",CountVectorizer()),
     ('mngr_percent_high',None),
     ('mngr_percent_low',None),
@@ -172,15 +196,15 @@ select_feat = [
     ('mngr_skill',None),
     ('Bin_Buildings',None),
     ('Bin_Managers',None),
+    #(['cluster'],None),
     ("joined_features", CountVectorizer( ngram_range=(1, 2),
                                        stop_words='english',
                                        max_features=200)),
-    #("description", [TfidfVectorizer(max_features=2**16,
-    #                         min_df=2, stop_words='english',
-    #                         use_idf=True),
-    #                TruncatedSVD(100),
-    #                Normalizer(copy=False)]
-    #)
+    ("description", [TfidfVectorizer(max_features=2**16,
+                             min_df=2, stop_words='english',
+                             use_idf=True),
+                    TruncatedSVD(2),
+                    Normalizer(copy=False)]),
     #("CleanDesc",[HTMLPreprocessor(),NLTKPreprocessor(),
     #                TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]
     #)
