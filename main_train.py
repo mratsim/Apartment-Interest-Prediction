@@ -2,7 +2,11 @@
 import lightgbm as lgb
 import xgboost as xgb
 from src.metrics import mlogloss
-import timeimport numpy as np
+import time
+import numpy as np
+from src.cross_val_xgb import cross_val_xgb
+from sklearn.model_selection import KFold
+
 
 def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
     
@@ -19,17 +23,18 @@ def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
     #lgb_train = lgb.Dataset(X_train, y_train)
     xgtrain = xgb.DMatrix(X_train, label=y_train)
 
-    
-    print('\n\nCross validating 5-fold...')
+    #Ideally cross val split should be done before feature engineering, and feature engineering + selection should be done separately for each splits so it better mimics out-of-sample predictions
+    print('\n\nCross validating 5-fold... and retrieving best stopping round')
     #cv = lgb.cv(params, lgb_train, n_stop, nfold=5, seed=1337)
-    cv = xgb.cv(params, xgtrain, n_stop, nfold=5, seed=1337, early_stopping_rounds=50)
+    #cv = xgb.cv(params, xgtrain, n_stop, nfold=5, seed=1337, early_stopping_rounds=50)
+    kf = KFold(n_splits=5, shuffle=True, random_state=1337) 
+    mean_round = cross_val_xgb(params, X_train, y_train, kf, metric)
     
-    
-    cv.to_csv('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-cv.csv')
-    print(cv)
+    #cv.to_csv('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-cv.csv')
+    #print(cv)
     
     print('\n\nStart Training on the whole dataset...')
-    n_stop = np.int(n_stop * 1.1)
+    n_stop = np.int(mean_round * 1.1)
     final_clf = xgb.train(params, xgtrain, n_stop)
     #final_clf = lgb.train(params, lgb_train, num_boost_round=n_stop)
     

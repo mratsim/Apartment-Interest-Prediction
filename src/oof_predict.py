@@ -1,5 +1,5 @@
 ### Out of fold predictions for XGBoost and LightGBM with early stopping support
-### Do not compute cros_val in parallel as XGB and LGB are already parallel
+### Do not compute cross_val in parallel as XGB and LGB are already parallel
 from sklearn.base import clone
 from sklearn.model_selection import train_test_split
 from src.metrics import mlogloss
