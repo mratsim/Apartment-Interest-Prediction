@@ -7,7 +7,7 @@ def preprocessing(X_train, X_test, y_train, tr_pipeline, select_feat, cache_file
     X_train, X_test, _, _ = tr_pipeline(X_train,X_test, y_train, cache_file)
     
     # Create a validation set
-    x_trn, x_val, y_trn, y_val = train_test_split(X_train, y_train, test_size=0.2, random_state=42)
+    x_trn, x_val, y_trn, y_val = train_test_split(X_train, y_train, test_size=0.6, random_state=42)
 
     # Select features - validation
     x_trn, x_val = feat_selection(select_feat, x_trn, x_val, y_trn)

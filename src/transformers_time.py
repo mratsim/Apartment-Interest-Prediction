@@ -30,7 +30,8 @@ def tr_datetime(train,test, y, cache_file):
             Created_DoY_sin = np.sin(((df["Created_TS"].dt.dayofyear -1)/365)*2*np.pi),
             Created_WoY_cos = np.cos(((df["Created_TS"].dt.weekofyear -1)/52)*2*np.pi),
             Created_WoY_sin = np.sin(((df["Created_TS"].dt.weekofyear -1)/52)*2*np.pi),
-            Created_Weekend = df["Created_TS"].dt.dayofyear.apply(_isWeekend)
+            Created_Weekend = df["Created_TS"].dt.dayofyear.apply(_isWeekend),
+            Time_passed = (df["Created_TS"].max() - df["Created_TS"])/np.timedelta64(-1, 'D')
             
             )
     return _trans(train), _trans(test), y, cache_file

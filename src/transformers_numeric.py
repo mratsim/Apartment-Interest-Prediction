@@ -46,7 +46,11 @@ def tr_bucket_rooms(train, test, y, cache_file):
 def tr_price_per_room(train, test, y, cache_file): #Assuming always 1 living room
     def _trans(df):
         return df.assign(
-            price_per_room = df['price'] / (df['bedrooms'] + 1)
+            price_per_room = df['price'] / (df['bedrooms'] + 1), # +1 for living room
+            rooms_sum = df['bedrooms'] + df['bathrooms'],
+            rooms_diff = df['bedrooms'] - df['bathrooms'],
+            price_per_totalrooms = df['price'] / (df['bedrooms'] + df['bathrooms'] + 1),
+            rooms_ratio = (df['bedrooms'] + 1) / df['bathrooms']
         )
     return _trans(train), _trans(test), y, cache_file
 

@@ -28,4 +28,5 @@ def output(X_test, listing_id, classifier, LabelEncoder, n_stop, metric):
         LabelEncoder.classes_[1]: [row[1] for row in predictions],
         LabelEncoder.classes_[2]: [row[2] for row in predictions]
         })
+       
     result.to_csv('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'.csv', index=False)

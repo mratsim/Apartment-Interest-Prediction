@@ -20,16 +20,16 @@ def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
     xgtrain = xgb.DMatrix(X_train, label=y_train)
 
     
-    print('\n\nCross validating on 33% of the dataset...')
-    #cv = lgb.cv(params, lgb_train, n_stop, nfold=3, seed=1337)
-    cv = xgb.cv(params, xgtrain, n_stop, nfold=3, seed=1337)
+    print('\n\nCross validating 5-fold...')
+    #cv = lgb.cv(params, lgb_train, n_stop, nfold=5, seed=1337)
+    cv = xgb.cv(params, xgtrain, n_stop, nfold=5, seed=1337, early_stopping_rounds=50)
     
     
     cv.to_csv('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-cv.csv')
     print(cv)
     
     print('\n\nStart Training on the whole dataset...')
-    
+    n_stop = n_stop
     final_clf = xgb.train(params, xgtrain, n_stop)
     #final_clf = lgb.train(params, lgb_train, num_boost_round=n_stop)
     
@@ -58,7 +58,7 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
         'verbose': 0
     }
 
-    print('Start Validation on 80% of the dataset...')
+    print('Start Validation on 40% of the dataset...')
     # train
     gbm = lgb.train(params,
                     lgb_train,
@@ -68,7 +68,7 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
                     verbose_eval=True,
                     feature_name='auto')
     
-    print('Start validating prediction on 20% unseen data')
+    print('Start validating prediction on 60% unseen data')
     # predict
     y_pred = gbm.predict(x_val, num_iteration=gbm.best_iteration)
     return gbm, y_pred, params, gbm.best_iteration
@@ -91,12 +91,12 @@ def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rou
     xgtrain = xgb.DMatrix(x_trn, label=y_trn)
     xgtest = xgb.DMatrix(x_val, label=y_val)
     
-    print('Start Validation on 80% of the dataset...')
+    print('Start Validation on 40% of the dataset...')
     # train
-    watchlist = [ (xgtrain,'train'), (xgtest, 'test') ]
-    model = xgb.train(plst, xgtrain, num_rounds, watchlist, early_stopping_rounds=20)
+    watchlist = [ (xgtest, 'test') ]
+    model = xgb.train(plst, xgtrain, num_rounds, watchlist, early_stopping_rounds=50)
     print('End trainind on 80% of the dataset...')
-    print('Start validating prediction on 20% unseen data')
+    print('Start validating prediction on 60% unseen data')
     # predict
     y_pred = model.predict(xgtest, ntree_limit=model.best_ntree_limit)
 

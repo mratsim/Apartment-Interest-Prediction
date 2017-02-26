@@ -24,15 +24,22 @@ def out_of_fold_predict(est, X, y, cv):
             early_stopping_rounds=50,
             verbose=False
            )
+        stop_round = clf.best_iteration
         print('#######  Validating for fold: ', n)
         # predict
-        y_pred = clf.predict_proba(x_val, num_iteration=clf.best_iteration)
+        y_pred = clf.predict_proba(x_val, num_iteration=stop_round)
         # eval
-        print('We stopped at boosting round: ', clf.best_iteration)
+        print('We stopped at boosting round: ', stop_round)
         print('The mlogloss of prediction is:', mlogloss(y_val, y_pred))
+        
+        print('#######  Retraining on whole fold: ', n)
+        clf = clone(est)
+        clf.fit(X[train_idx], y[train_idx], early_stopping_rounds=50, verbose=False)
+        
+        stop_round = np.int(stop_round*1.1)
         
         # Predict out-of-fold
         print('#######  Predicting for fold: ', n)
-        result[valid_idx] = clf.predict_proba(X[valid_idx], num_iteration=clf.best_iteration)
+        result[valid_idx] = clf.predict_proba(X[valid_idx], num_iteration=stop_round)
         n +=1
     return result
