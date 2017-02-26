@@ -34,7 +34,7 @@ def out_of_fold_predict(est, X, y, cv):
         
         print('#######  Retraining on whole fold: ', n)
         clf = clone(est)
-        clf.fit(X[train_idx], y[train_idx], early_stopping_rounds=50, verbose=False)
+        clf.fit(X[train_idx], y[train_idx], verbose=False)
         
         stop_round = np.int(stop_round*1.1)
         

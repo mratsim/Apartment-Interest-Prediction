@@ -59,11 +59,9 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
                              use_idf=True)
 
     
-    train_raw = _clean_desc(train, test, y, cache_file)['RawText']
-    train_vect = vectorizer.fit_transform(train_raw)
-    
-    test_raw = _clean_desc(train, test, y, cache_file)['RawText']
-    test_vect = vectorizer.transform(test_raw)
+    train_raw, test_raw, _, _ = _clean_desc(train, test, y, cache_file)
+    train_vect = vectorizer.fit_transform(train_raw['CleanDesc'])
+    test_vect = vectorizer.transform(test_raw['CleanDesc'])
     # print(vectorizer.get_feature_names())
     
     svd = TruncatedSVD(100) #Recommended 100 dimensions for LSA
