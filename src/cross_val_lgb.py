@@ -1,11 +1,11 @@
 from src.metrics import mlogloss
 import numpy as np
-import xgboost as xgb
+import lightgbm as lgb
 import time
 
 
 #Ideally cross val split should be done before feature engineering, and feature engineering + selection should be done separately for each splits so it better mimics out-of-sample predictions
-def cross_val_xgb(params, X, y, cv, metric):
+def cross_val_lgb(params, X, y, cv, metric):
     n =1
     num_rounds = 3000
     
@@ -19,14 +19,23 @@ def cross_val_xgb(params, X, y, cv, metric):
         print('#################################')
         print('#########  Validating for fold: \n', n)
 
-        xgtrain = xgb.DMatrix(X[train_idx], label=y[train_idx])
-        xgtest = xgb.DMatrix(X[valid_idx], label=y[valid_idx])
+        lgb_train = lgb.Dataset(X[train_idx], label=y[train_idx])
+        lgb_test = lgb.Dataset(X[valid_idx], label=y[valid_idx], reference=lgb_train)
 
-        watchlist = [ (xgtest, 'test') ]
-        model = xgb.train(params, xgtrain, num_rounds, watchlist, early_stopping_rounds=50, verbose_eval=False)
+        model = lgb.train(params,
+                    lgb_train,
+                    num_boost_round=2048,
+                    valid_sets=lgb_test,
+                    early_stopping_rounds=50,
+                    verbose_eval=False,
+                    feature_name='auto')
         
-        rounds = model.best_ntree_limit
-        score = model.best_score
+        rounds = model.best_iteration
+        #score = model.best_score
+        
+        # Argh best_score doesn't exist yet in LightGBM: ticket open - https://github.com/Microsoft/LightGBM/issues/329
+        y_pred = model.predict(X[valid_idx], num_iteration=rounds)
+        score = mlogloss(y[valid_idx], y_pred)
         
         print('Fold', n,'- best round:', rounds)
         print('Fold', n,'- best score:', score)
@@ -47,7 +56,7 @@ def cross_val_xgb(params, X, y, cv, metric):
     print("Mean early stopping round is: ", round(mean_round,3))
     print("Std Dev early stopping round is: ", round(std_round,3))
     
-    with open('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-xgb-cv.txt', 'a') as out_cv:
+    with open('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-lgb-cv.txt', 'a') as out_cv:
         out_cv.write("Cross Validation Scores are: " + str(np.round(list_scores,3)) + "\n")
         out_cv.write("Mean CrossVal score is: " + str(round(mean_score,3)) + "\n")
         out_cv.write("Std Dev CrossVal score is: " + str(round(std_score,3)) + "\n")

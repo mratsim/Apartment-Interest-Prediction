@@ -162,8 +162,8 @@ select_feat = [
     ("bucket_bath",None), #
     (["bedrooms"],None),
     ('bucket_bed',None),  # 
-    ('rooms_sum',None),
-    ('rooms_diff',None),
+    #('rooms_sum',None),
+    #('rooms_diff',None),
     #('price_per_totalrooms',None), #
     #('rooms_ratio', None), #
     (["latitude"],None),

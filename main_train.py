@@ -5,13 +5,14 @@ from src.metrics import mlogloss
 import time
 import numpy as np
 from src.cross_val_xgb import cross_val_xgb
+from src.cross_val_lgb import cross_val_lgb
 from sklearn.model_selection import KFold
 
 
 def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
     
-    clf, y_pred, params, n_stop = _clf_xgb(x_trn, x_val, y_trn, y_val)
-    #clf, y_pred, params, n_stop = _clf_lgb(x_trn, x_val, y_trn, y_val)
+    #clf, y_pred, params, n_stop = _clf_xgb(x_trn, x_val, y_trn, y_val)
+    clf, y_pred, params, n_stop = _clf_lgb(x_trn, x_val, y_trn, y_val)
 
     # eval
     metric = mlogloss(y_val, y_pred)
@@ -20,23 +21,27 @@ def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
     
     
     
-    #lgb_train = lgb.Dataset(X_train, y_train)
-    xgtrain = xgb.DMatrix(X_train, label=y_train)
+    lgb_train = lgb.Dataset(X_train, y_train)
+    #xgtrain = xgb.DMatrix(X_train, label=y_train)
 
     #Ideally cross val split should be done before feature engineering, and feature engineering + selection should be done separately for each splits so it better mimics out-of-sample predictions
     print('\n\nCross validating 5-fold... and retrieving best stopping round')
     #cv = lgb.cv(params, lgb_train, n_stop, nfold=5, seed=1337)
     #cv = xgb.cv(params, xgtrain, n_stop, nfold=5, seed=1337, early_stopping_rounds=50)
     kf = KFold(n_splits=5, shuffle=True, random_state=1337) 
-    mean_round = cross_val_xgb(params, X_train, y_train, kf, metric)
+    #mean_round = cross_val_xgb(params, X_train, y_train, kf, metric)
+    mean_round = cross_val_lgb(params, X_train, y_train, kf, metric)
     
     #cv.to_csv('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-cv.csv')
     #print(cv)
     
     print('\n\nStart Training on the whole dataset...')
-    n_stop = np.int(mean_round * 1.1)
-    final_clf = xgb.train(params, xgtrain, n_stop)
-    #final_clf = lgb.train(params, lgb_train, num_boost_round=n_stop)
+    #n_stop = np.int(mean_round * 1.1)
+    n_stop = np.int(mean_round)
+
+    
+    #final_clf = xgb.train(params, xgtrain, n_stop)
+    final_clf = lgb.train(params, lgb_train, num_boost_round=n_stop)
     
     return final_clf, metric, n_stop
 
@@ -56,10 +61,10 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
         'num_class': 3,
         'metric': {'multi_logloss'},
         'learning_rate': 0.1,
-        'feature_fraction': 0.8,
+        #'feature_fraction': 0.8,
         #'bagging_fraction': 0.8,
-        'max_depth': 6,
-        'bagging_freq': 0,
+        'num_leaves': 32,
+        #'bagging_freq': 3,
         'verbose': 0
     }
 
