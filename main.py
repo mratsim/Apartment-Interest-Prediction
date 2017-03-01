@@ -179,14 +179,14 @@ select_feat = [
     (["NumPhotos"],None),
     #("Created_Year",None), #Every listing is 2016
     (["Created_Month"],None),
-    (["Created_Day"],None),
+    #(["Created_Day"],None),
     (["Created_Hour"],None),
     ('listing_id',None),
     #(["Created_DayOfWeek"],None), #
     #('Created_DayOfYear',None),
     #('Created_WeekOfYear',None), #
-    #('Created_D_cos',None),
-    #('Created_D_sin',None),
+    ('Created_D_cos',None),
+    ('Created_D_sin',None),
     ('Created_DoW_cos',None),
     ('Created_DoW_sin',None),
     ('Created_DoY_cos',None),
