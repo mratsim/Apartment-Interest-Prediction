@@ -226,7 +226,7 @@ select_feat = [
     #                TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]
     #)
     ("description", CountVectorizer(vocabulary=vocab_metro,binary=True)),
-    #("description", CountVectorizer(vocabulary=vocab_metro_lines,binary=True, lowercase=False))
+    ("description", CountVectorizer(vocabulary=vocab_metro_lines,binary=True, lowercase=False))
 ]
                     
 
