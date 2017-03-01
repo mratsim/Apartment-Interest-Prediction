@@ -6,3 +6,5 @@ __pycache__/
 *.db
 core
 *.txt
+*.jpg
+data_preprocessed/

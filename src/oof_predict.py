@@ -32,11 +32,12 @@ def out_of_fold_predict(est, X, y, cv):
         print('We stopped at boosting round: ', stop_round)
         print('The mlogloss of prediction is:', mlogloss(y_val, y_pred))
         
-        print('#######  Retraining on whole fold: ', n)
-        clf = clone(est)
-        clf.fit(X[train_idx], y[train_idx], verbose=False)
+        # Commented out, seemed to give worse result to retrain
+        # print('#######  Retraining on whole fold: ', n)
+        # clf = clone(est)
+        # clf.fit(X[train_idx], y[train_idx], verbose=False)
         
-        stop_round = np.int(stop_round*1.1)
+        # stop_round = np.int(stop_round*1.1)
         
         # Predict out-of-fold
         print('#######  Predicting for fold: ', n)

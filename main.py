@@ -50,6 +50,7 @@ idx_test = df_test['listing_id']
 # Retirer numéro de rue - DONE ?
 # Imputer les rues sans géoloc
 # Quartier (centre le plus proche)
+# Distance centre NY
 # Distance par rapport au centre
 # Clusteriser la latitude/longitude
 # manager skill (2*high + medium)
@@ -65,6 +66,14 @@ idx_test = df_test['listing_id']
 #  On the Rent Hop website you can notice that when browsing listings only the first two images are displayed. Only when you click on the listing do you see the rest of the images.
 # Size of image (x * x and in MB)
 # Exif
+# Imputation, depuis building id, street address -> display address, latitude, longitude
+# Public Holiday
+# Season
+# Business quarter
+# Business hours, lunch hours, early morning, evening, late evening
+# Lag: high interest in the past hour/day
+# Lag: low interest in the past hour/day
+# Semaine juste avant/après les congés
 
 #######################
 
@@ -90,7 +99,7 @@ tr_pipeline = feat_extraction_pipe(
     tr_tfidf_lsa_lgb,
     tr_managerskill,
     #tr_log_price,
-    #tr_bucket_rooms,
+    tr_bucket_rooms,
     tr_bin_buildings_mngr,
     tr_price_per_room,
     tr_tfidf_features,
@@ -98,7 +107,7 @@ tr_pipeline = feat_extraction_pipe(
     tr_encoded_building,
     tr_encoded_disp_addr,
     tr_encoded_street_addr,
-    #tr_clustering,
+    tr_clustering,
     tr_price_per_room
     #tr_dumpcsv
 )
@@ -149,13 +158,13 @@ select_feat = [
     ("bathrooms",None),
     #('bathrooms_only',None),
     ('toilets_only',None),
-    #("bucket_bath",None),
+    ("bucket_bath",None),
     (["bedrooms"],None),
-    #('bucket_bed',None),
+    ('bucket_bed',None),
     #('rooms_sum',None),
     #('rooms_diff',None),
-    #('price_per_totalrooms',None),
-    #('rooms_ratio', None),
+    ('price_per_totalrooms',None),
+    ('rooms_ratio', None),
     (["latitude"],None),
     (["longitude"],None),
     #("latitude_cluster",None),
@@ -166,14 +175,14 @@ select_feat = [
     (["NumDescWords"],None),
     (["NumFeat"],None),
     (["NumPhotos"],None),
-    ("Created_Year",None), #Every listing is 2016
+    #("Created_Year",None), #Every listing is 2016
     (["Created_Month"],None),
     (["Created_Day"],None),
     (["Created_Hour"],None),
     ('listing_id',None),
-    #(["Created_DayOfWeek"],None),
+    (["Created_DayOfWeek"],None),
     #('Created_DayOfYear',None),
-    #('Created_WeekOfYear',None),
+    ('Created_WeekOfYear',None),
     #('Created_D_cos',None),
     #('Created_D_sin',None),
     ('Created_DoW_cos',None),
@@ -183,12 +192,14 @@ select_feat = [
     #('Created_WoY_cos',None),
     #('Created_WoY_sin',None),
     ('Created_Weekend',None),
-    #('Time_passed',None),
+    ('Time_passed',None),
+    ('Is_Holiday',None),
+    ('Is_SchoolHoliday',None),
     ("tfidf_high",None),
     ("tfidf_medium",None),
     ("tfidf_low",None),
     ("encoded_display_address",None),
-    ("display_address",CountVectorizer()),
+    #("display_address",CountVectorizer()),
     #("encoded_street_address",None),
     #("street_address",CountVectorizer()),
     (["encoded_manager_id"],None),
@@ -201,14 +212,14 @@ select_feat = [
     ('mngr_skill',None),
     ('Bin_Buildings',None),
     ('Bin_Managers',None),
-    #(['cluster'],None),
-    ("joined_features", CountVectorizer( ngram_range=(1, 2),
+    (['cluster'],None),
+    ("joined_features", CountVectorizer( ngram_range=(1, 3),
                                        stop_words='english',
                                        max_features=200)),
     ("description", [TfidfVectorizer(max_features=2**16,
                              min_df=2, stop_words='english',
                              use_idf=True),
-                    TruncatedSVD(2),
+                    TruncatedSVD(3),
                     Normalizer(copy=False)]),
     #("CleanDesc",[HTMLPreprocessor(),NLTKPreprocessor(),
     #                TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]

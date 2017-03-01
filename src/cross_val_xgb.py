@@ -45,16 +45,16 @@ def cross_val_xgb(params, X, y, cv, metric):
     print("Mean CrossVal score is: ", round(mean_score,3))
     print("Std Dev CrossVal score is: ", round(std_score,3))
     print("Cross Validation early stopping rounds are: ", np.round(list_rounds,3))
-    print("Mean early stopping round is: ", round(np.mean(mean_round),3))
-    print("Std Dev early stopping round is: ", round(np.std(std_round),3))
+    print("Mean early stopping round is: ", round(mean_round,3))
+    print("Std Dev early stopping round is: ", round(std_round,3))
     
-    with open('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-cv', 'a') as out_cv:
+    with open('./out/'+time.strftime("%Y-%m-%d_%H%M-")+'-valid'+str(metric)+'-cv.txt', 'a') as out_cv:
         out_cv.write("Cross Validation Scores are: " + str(np.round(list_scores,3)) + "\n")
         out_cv.write("Mean CrossVal score is: " + str(round(mean_score,3)) + "\n")
         out_cv.write("Std Dev CrossVal score is: " + str(round(std_score,3)) + "\n")
         out_cv.write("Cross Validation early stopping rounds are: " + str(np.round(list_rounds,3)) + "\n")
-        out_cv.write("Mean early stopping round is: " + str(round(np.mean(mean_round),3)) + "\n")
-        out_cv.write("Std Dev early stopping round is: " + str(round(np.std(std_round),3)) + "\n")
+        out_cv.write("Mean early stopping round is: " + str(round(mean_round,3)) + "\n")
+        out_cv.write("Std Dev early stopping round is: " + str(round(std_round,3)) + "\n")
     
     return mean_round
     

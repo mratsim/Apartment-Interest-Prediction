@@ -9,12 +9,10 @@ from sklearn import metrics
 import time
 
 
-# define the number of kilometers in one radian
-kms_per_radian = 6371.0088
-# define epsilon as 1.5 kilometers, converted to radians for use by haversine
-epsilon = 1.5 / kms_per_radian
+# from http://scikit-learn.org/stable/modules/generated/sklearn.neighbors.DistanceMetric.html
+# All lat/long must be converted to radians, i.e. multiplied by pi/180
+#output is also in rad
 
-# Adapted from https://github.com/gboeing/2014-summer-travels/blob/master/clustering-scikitlearn.ipynb
 def tr_clustering(train,test, y, cache_file):
     def _get_centermost_point(cluster):
         centroid = (MultiPoint(cluster).centroid.x, MultiPoint(cluster).centroid.y)
@@ -33,7 +31,9 @@ def tr_clustering(train,test, y, cache_file):
                     prediction_data=True 
                    )
         
-        df = df.assign( cluster = db.fit_predict(df[['latitude','longitude']]) )
+        coords = df[['latitude','longitude']] * np.pi/180
+        
+        df = df.assign( cluster = db.fit_predict(coords) )
         # get the number of clusters
         num_clusters = db.labels_.max()
         message = 'Clustered {:,} points down to {:,} clusters, for {:.1f}% compression in {:,.2f} seconds'
@@ -46,7 +46,9 @@ def tr_clustering(train,test, y, cache_file):
         return db, cluster_centers, df
     
     def _cluster_test(hdbscan, cluster_centers, df):
-        df = df.assign(cluster = approximate_predict(hdbscan, df[['latitude','longitude']])[0])
+        coords = df[['latitude','longitude']] * np.pi/180
+        
+        df = df.assign(cluster = approximate_predict(hdbscan, coords)[0])
         df = df.merge(cluster_centers, left_on='cluster', right_index=True,how='left',suffixes=('', '_cluster'))
         
         return df
