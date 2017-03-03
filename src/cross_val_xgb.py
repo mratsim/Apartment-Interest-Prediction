@@ -12,7 +12,7 @@ def cross_val_xgb(params, X, y, cv, metric):
     list_rounds = []
     list_scores = []
     
-    splits = cv.split(X)
+    splits = cv.split(X, y)
     
     
     for train_idx, valid_idx in splits:

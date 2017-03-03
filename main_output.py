@@ -11,10 +11,10 @@ def output(X_test, listing_id, classifier, LabelEncoder, n_stop, metric):
     # print(X_test.dtypes)
     
     # LightGBM
-    predictions = classifier.predict(X_test, num_iteration=n_stop)
+    #predictions = classifier.predict(X_test, num_iteration=n_stop)
     
-    #xgtest = xgb.DMatrix(X_test)
-    #predictions = classifier.predict(xgtest, ntree_limit=n_stop)
+    xgtest = xgb.DMatrix(X_test)
+    predictions = classifier.predict(xgtest, ntree_limit=n_stop)
 
     
     #debug

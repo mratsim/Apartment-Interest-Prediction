@@ -87,7 +87,7 @@ from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.lib_sklearn_transformer_nlp import NLTKPreprocessor, HTMLPreprocessor
 from src.transformers_appart_features import tr_tfidf_features
 from src.transformers_categorical import tr_managerskill, tr_bin_buildings_mngr
-from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr
+from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr, tr_filtered_display_addr
 from src.transformers_geoloc import tr_clustering
 
 # Feature extraction - sequence of transformations
@@ -108,6 +108,7 @@ tr_pipeline = feat_extraction_pipe(
     tr_encoded_building,
     tr_encoded_disp_addr,
     tr_encoded_street_addr,
+    tr_filtered_display_addr,
     #tr_clustering,
     tr_price_per_room
     #tr_dumpcsv
@@ -202,6 +203,7 @@ select_feat = [
     ("tfidf_low",None),
     ("encoded_display_address",None),
     ("display_address",CountVectorizer()), ##
+    (['street', 'avenue', 'east', 'west', 'north', 'south'], None),
     #("encoded_street_address",None),
     #("street_address",CountVectorizer()),
     (["encoded_manager_id"],None),

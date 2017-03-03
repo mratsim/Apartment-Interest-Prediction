@@ -1,5 +1,6 @@
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
+import string
 # import pandas as pd
 
 # WARNING - Deprecated - LabelEncoder is directly usable at the feat selection stage
@@ -35,6 +36,43 @@ def tr_encoded_disp_addr(train, test, y, cache_file):
 def tr_encoded_street_addr(train, test, y, cache_file):
     trn, tst = _encode_categoricals(train,test,"street_address")
     return trn, tst, y, cache_file
+
+def tr_filtered_display_addr(train, test, y, cache_file):
+    address_map = {
+    'w': 'west',
+    'st.': 'street',
+    'ave': 'avenue',
+    'st': 'street',
+    'e': 'east',
+    'n': 'north',
+    's': 'south'
+    }
+    remove_punct_map = dict.fromkeys(map(ord, string.punctuation))
+    def _address_map_func(s):
+        s = s.split(' ')
+        out = []
+        for x in s:
+            if x in address_map:
+                out.append(address_map[x])
+            else:
+                out.append(x)
+        return ' '.join(out)
+    def _trans(df):
+        df = df.assign(
+            filtered_address = df['display_address']
+                                    .apply(str.lower)
+                                    .apply(lambda x: x.translate(remove_punct_map))
+                                    .apply(lambda x: _address_map_func(x))
+        )
+        new_cols = ['street', 'avenue', 'east', 'west', 'north', 'south']
+
+        for col in new_cols:
+            df[col] = df['filtered_address'].apply(lambda x: 1 if col in x else 0)
+
+        df['other_address'] = df[new_cols].apply(lambda x: 1 if x.sum() == 0 else 0, axis=1)
+        return df
+    
+    return _trans(train), _trans(test), y, cache_file
 
 #############
 # Manager skill
