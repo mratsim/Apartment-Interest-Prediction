@@ -51,6 +51,8 @@ def tr_datetime(train,test, y, cache_file):
             
             Created_D_cos = np.cos(((df["Created_TS"].dt.day -1)/31)*2*np.pi),
             Created_D_sin = np.sin(((df["Created_TS"].dt.day -1)/31)*2*np.pi),
+            Created_H_cos = np.cos(((df["Created_TS"].dt.hour -1)/24)*2*np.pi),
+            Created_H_sin = np.sin(((df["Created_TS"].dt.hour -1)/24)*2*np.pi),
             Created_DoW_cos = np.cos(((df["Created_TS"].dt.dayofweek -1)/7)*2*np.pi),
             Created_DoW_sin = np.sin(((df["Created_TS"].dt.dayofweek -1)/7)*2*np.pi),
             Created_DoY_cos = np.cos(((df["Created_TS"].dt.dayofyear -1)/365)*2*np.pi),

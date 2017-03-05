@@ -9,6 +9,7 @@ from nltk import pos_tag
 
 from sklearn.base import BaseEstimator, TransformerMixin
 
+
 #https://gist.github.com/bbengfort/044682e76def583a12e6c09209c664a1
 class NLTKPreprocessor(BaseEstimator, TransformerMixin):
 
@@ -85,3 +86,5 @@ class HTMLPreprocessor(BaseEstimator,TransformerMixin):
         s = pd.Series(X)
         s.apply(lambda x: self._toBeautifulText(x))
         return s
+
+

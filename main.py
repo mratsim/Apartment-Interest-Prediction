@@ -86,7 +86,7 @@ from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.lib_sklearn_transformer_nlp import NLTKPreprocessor, HTMLPreprocessor
 from src.transformers_appart_features import tr_tfidf_features
-from src.transformers_categorical import tr_managerskill, tr_bin_buildings_mngr
+from src.transformers_categorical import tr_managerskill, tr_bin_buildings_mngr, tr_bin_buildings_mngr_v2
 from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr, tr_filtered_display_addr
 from src.transformers_geoloc import tr_clustering
 
@@ -97,11 +97,12 @@ tr_pipeline = feat_extraction_pipe(
     tr_numdescwords,
     tr_datetime,
     tr_split_bath_toilets,
-    tr_tfidf_lsa_lgb,
+    #tr_tfidf_lsa_lgb,
     tr_managerskill,
     #tr_log_price,
     tr_bucket_rooms,
-    tr_bin_buildings_mngr,
+    #tr_bin_buildings_mngr,
+    tr_bin_buildings_mngr_v2,
     tr_price_per_room,
     tr_tfidf_features,
     tr_encoded_manager,
@@ -188,6 +189,8 @@ select_feat = [
     #('Created_WeekOfYear',None), #
     ('Created_D_cos',None),
     ('Created_D_sin',None),
+    #('Created_H_cos',None),
+    #('Created_H_sin',None),
     ('Created_DoW_cos',None),
     ('Created_DoW_sin',None),
     ('Created_DoY_cos',None),
@@ -198,12 +201,12 @@ select_feat = [
     #('Time_passed',None), #
     ('Is_Holiday',None),
     ('Is_SchoolHoliday',None),
-    ("tfidf_high",None),
-    ("tfidf_medium",None),
-    ("tfidf_low",None),
+    #("tfidf_high",None),
+    #("tfidf_medium",None),
+    #("tfidf_low",None),
     ("encoded_display_address",None),
     ("display_address",CountVectorizer()), ##
-    (['street', 'avenue', 'east', 'west', 'north', 'south'], None),
+    #(['street', 'avenue', 'east', 'west', 'north', 'south'], None),
     #("encoded_street_address",None),
     #("street_address",CountVectorizer()),
     (["encoded_manager_id"],None),
@@ -214,9 +217,7 @@ select_feat = [
     ('mngr_percent_low',None),
     ('mngr_percent_medium',None),
     ('mngr_skill',None),
-    ('Bin_Buildings',None),
-    ('Bin_Managers',None),
-    ("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 ?
+    ("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 pr 1,3?
                                        stop_words='english',
                                        max_features=200)),
     ("description", [TfidfVectorizer(max_features=2**16,
@@ -224,11 +225,15 @@ select_feat = [
                              use_idf=True),
                     TruncatedSVD(2), # 2 or 3
                     Normalizer(copy=False)]),
-    #("CleanDesc",[HTMLPreprocessor(),NLTKPreprocessor(),
+    #("description",[HTMLPreprocessor(),NLTKPreprocessor(),
     #                TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]
-    #)
+    #),
     ("description", CountVectorizer(vocabulary=vocab_metro,binary=True)),
-    ("description", CountVectorizer(vocabulary=vocab_metro_lines,binary=True, lowercase=False))
+    ("description", CountVectorizer(vocabulary=vocab_metro_lines,binary=True, lowercase=False)),
+    #('Bin_Buildings',None),
+    #('Bin_Managers',None),
+    (['top_' + str(p) + '_manager' for p in [1,2,5,10,15,20,25,30,50]],None),
+    (['top_' + str(p) + '_building' for p in [1,2,5,10,15,20,25,30,50]],None),
 ]
                     
 
