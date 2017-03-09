@@ -93,8 +93,8 @@ def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rou
     param = {}
     param['objective'] = 'multi:softprob'
     param['eta'] = 0.1
-    param['max_depth'] = 6
-    #param['max_depth'] = 4
+    #param['max_depth'] = 6
+    param['max_depth'] = 4
     param['silent'] = 1
     param['num_class'] = 3
     param['eval_metric'] = "mlogloss"

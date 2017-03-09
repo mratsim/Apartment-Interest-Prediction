@@ -32,6 +32,16 @@ def tr_log_price(train, test, y, cache_file):
             )
     return _trans(train), _trans(test), y, cache_file
 
+def tr_bin_price(train, test, y, cache_file):
+    idx_train = train.shape[0]
+    train_test = pd.concat((train, test), axis=0)
+    
+    train_test['Bin_price'] = pd.qcut(train_test['price'], 100, labels=False,duplicates='drop')
+    
+    trn = train_test.iloc[:idx_train, :]
+    tst = train_test.iloc[idx_train:, :]
+    return trn, tst, y, cache_file
+
 # Bucket bath and bedroom
 def tr_bucket_rooms(train, test, y, cache_file):
     def _trans(df):
@@ -47,10 +57,12 @@ def tr_price_per_room(train, test, y, cache_file): #Assuming always 1 living roo
     def _trans(df):
         return df.assign(
             price_per_room = df['price'] / (df['bedrooms'] + 1), # +1 for living room
+            price_per_bath = df['price'] / (df['bathrooms'] + 1),
             rooms_sum = df['bedrooms'] + df['bathrooms'],
             rooms_diff = df['bedrooms'] - df['bathrooms'],
             price_per_totalrooms = df['price'] / (df['bedrooms'] + df['bathrooms'] + 1),
-            rooms_ratio = (df['bedrooms'] + 1) / df['bathrooms']
+            rooms_ratio = (df['bedrooms'] + 1) / df['bathrooms'],
+            beds_perc = df['bedrooms'] / (df['bedrooms'] + df['bathrooms'])
         )
     return _trans(train), _trans(test), y, cache_file
 

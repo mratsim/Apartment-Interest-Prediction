@@ -75,12 +75,17 @@ idx_test = df_test['listing_id']
 # Lag: high interest in the past hour/day
 # Lag: low interest in the past hour/day
 # Semaine juste avant/après les congés
+# Chercher 1LDK, et Squae meters
+# Spell checker
+# Number of spelling errors
+# Détecter mêmes photos/stock photos
+# Ratio to median in neigborhood
 
 #######################
 
 # # Command Center
 
-from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_log_price, tr_bucket_rooms, tr_price_per_room, tr_split_bath_toilets
+from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_log_price, tr_bucket_rooms, tr_price_per_room, tr_split_bath_toilets, tr_bin_price
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
@@ -97,7 +102,7 @@ tr_pipeline = feat_extraction_pipe(
     tr_numdescwords,
     tr_datetime,
     tr_split_bath_toilets,
-    #tr_tfidf_lsa_lgb,
+    tr_tfidf_lsa_lgb,
     tr_managerskill,
     #tr_log_price,
     tr_bucket_rooms,
@@ -111,7 +116,8 @@ tr_pipeline = feat_extraction_pipe(
     tr_encoded_street_addr,
     tr_filtered_display_addr,
     #tr_clustering,
-    tr_price_per_room
+    tr_price_per_room,
+    tr_bin_price
     #tr_dumpcsv
 )
 
@@ -162,12 +168,14 @@ select_feat = [
     #('bathrooms_only',None),
     ('toilets_only',None),
     ("bucket_bath",None), #
-    (["bedrooms"],None),
+    ("bedrooms",None),
     ('bucket_bed',None),  # 
-    #('rooms_sum',None),
-    #('rooms_diff',None),
-    #('price_per_totalrooms',None), #
-    #('rooms_ratio', None), #
+    ('rooms_sum',None),
+    ('rooms_diff',None),
+    ('price_per_totalrooms',None), #
+    ('price_per_bath',None),
+    ('beds_perc',None),
+    ('rooms_ratio', None), #
     (["latitude"],None),
     (["longitude"],None),
     #("latitude_cluster",None),
@@ -175,6 +183,7 @@ select_feat = [
     #(['cluster'],None), #
     #('log_price',None),
     (["price"],None),
+    #('Bin_price',None),
     ('price_per_room',None),
     (["NumDescWords"],None),
     (["NumFeat"],None),
@@ -207,7 +216,7 @@ select_feat = [
     ("encoded_display_address",None),
     ("display_address",CountVectorizer()), ##
     #(['street', 'avenue', 'east', 'west', 'north', 'south'], None),
-    #("encoded_street_address",None),
+    ("encoded_street_address",None),
     #("street_address",CountVectorizer()),
     (["encoded_manager_id"],None),
     ("manager_id",CountVectorizer()),
@@ -216,10 +225,11 @@ select_feat = [
     ('mngr_percent_high',None),
     ('mngr_percent_low',None),
     ('mngr_percent_medium',None),
-    ('mngr_skill',None),
+    ('mngr_skill',None), #Beware of overfitting
     ("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 pr 1,3?
                                        stop_words='english',
                                        max_features=200)),
+    #("joined_feat_underscore", CountVectorizer(max_features=200)),
     ("description", [TfidfVectorizer(max_features=2**16,
                              min_df=2, stop_words='english',
                              use_idf=True),
