@@ -7,14 +7,21 @@ import numpy as np
 # It does not provide the same interface as others as it does not take X, y parameter, only y
 # As such it cannot be use in a Pipeline.
 
+def tr_lower_address(train, test, y, cache_file):
+    def _trans(df):
+        return df.assign(
+            lower_disp_addr = df['display_address'].apply(str.lower),
+            lower_street_addr = df['street_address'].apply(str.lower)
+        )
+    return _trans(train),_trans(test), y, cache_file
 
 # DEPRECATED Apply Label encoder
 def _encode_categoricals(train,test, sColumn):
     le = LabelEncoder() 
-    le.fit(list(train[sColumn].values) + list(test[sColumn].values))
+    le.fit(list(train[sColumn].apply(str.lower).values) + list(test[sColumn].apply(str.lower).values))
     
     def _trans(df, sColumn, le):
-        encoded = le.transform(df[sColumn])
+        encoded = le.transform(df[sColumn].apply(str.lower))
         df['encoded_' + sColumn] = encoded
         # df['encoded_' + sColumn] = df['encoded_' + sColumn].astype('category')
         return df
@@ -110,6 +117,45 @@ def tr_managerskill(train, test, y, cache_file):
 
     return trn, tst, y, cache_file
 
+#############
+# Building hype
+def tr_buildinghype(train, test, y, cache_file):
+    # Beware of not leaking "mean" or frequency from train to test.
+    
+    df_bdng = (pd.concat([train['building_id'], 
+                           pd.get_dummies(train['interest_level'])], axis = 1)
+                                        .groupby('building_id')
+                                        .mean()
+                                        .rename(columns = lambda x: 'bdng_percent_' + x)
+                                           )
+    df_bdng['bdng_count']=train.groupby('building_id').size()
+    df_bdng['bdng_hype'] = df_bdng['bdng_percent_high']*2 + df_bdng['bdng_percent_medium']
+    # get ixes for unranked buildings...
+    unrkd_bdngs_ixes = df_bdng['bdng_count']<20
+    # ... and ranked ones
+    rkd_bdngs_ixes = ~unrkd_bdngs_ixes
+
+    # compute mean values from ranked buildings and assign them to unranked ones
+    mean_val = df_bdng.loc[rkd_bdngs_ixes,
+                           ['bdng_percent_high',
+                            'bdng_percent_low',
+                            'bdng_percent_medium',
+                            'bdng_hype']].mean()
+    df_bdng.loc[unrkd_bdngs_ixes, ['bdng_percent_high',
+                                    'bdng_percent_low',
+                                    'bdng_percent_medium',
+                                    'bdng_hype']] = mean_val.values
+
+    trn = train.merge(df_bdng.reset_index(),how='left', left_on='building_id', right_on='building_id')
+    tst = test.merge(df_bdng.reset_index(),how='left', left_on='building_id', right_on='building_id')
+        
+    new_bdng_ixes = tst['bdng_percent_high'].isnull()
+    tst.loc[new_bdng_ixes,['bdng_percent_high',
+                                    'bdng_percent_low',
+                                    'bdng_percent_medium',
+                                    'bdng_hype']]  = mean_val.values
+
+    return trn, tst, y, cache_file
 
 #############
 # Bins managers and building

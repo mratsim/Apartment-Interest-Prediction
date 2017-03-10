@@ -55,15 +55,20 @@ def tr_bucket_rooms(train, test, y, cache_file):
 
 def tr_price_per_room(train, test, y, cache_file): #Assuming always 1 living room
     def _trans(df):
-        return df.assign(
-            price_per_room = df['price'] / (df['bedrooms'] + 1), # +1 for living room
-            price_per_bath = df['price'] / (df['bathrooms'] + 1),
+        df = df.assign(
+            price_per_bedlivingroom = df['price'] / (df['bedrooms'] + 1), # +1 for living room
+            price_per_bath = df['price'] / (df['bathrooms']),
+            price_per_bed = df['price'] / (df['bathrooms']),
             rooms_sum = df['bedrooms'] + df['bathrooms'],
             rooms_diff = df['bedrooms'] - df['bathrooms'],
             price_per_totalrooms = df['price'] / (df['bedrooms'] + df['bathrooms'] + 1),
+            price_per_room = df['price'] / (df['bedrooms'] + df['bathrooms']),
             rooms_ratio = (df['bedrooms'] + 1) / df['bathrooms'],
+            bed_per_bath = df['bedrooms'] / df['bathrooms'],
             beds_perc = df['bedrooms'] / (df['bedrooms'] + df['bathrooms'])
         )
+        df.replace([np.inf,-np.inf],-1)
+        return df
     return _trans(train), _trans(test), y, cache_file
 
 def tr_split_bath_toilets(train, test, y, cache_file):
