@@ -41,8 +41,8 @@ def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train):
     #print(cv)
     
     print('\n\nStart Training on the whole dataset...')
-    n_stop = np.int(mean_round * 1.1) #0.54874
-    #n_stop = np.int(mean_round) #0.54934 with XGBoost
+    #n_stop = np.int(mean_round * 1.1) #0.54874
+    n_stop = np.int(mean_round) #0.54934 with XGBoost
 
     
     final_clf = xgb.train(params, xgtrain, n_stop)
@@ -89,9 +89,10 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
     y_pred = gbm.predict(x_val, num_iteration=gbm.best_iteration)
     return gbm, y_pred, params, gbm.best_iteration
 
-def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rounds=2000):
+def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rounds=4096):
     param = {}
     param['objective'] = 'multi:softprob'
+    #param['eta'] = 0.02
     param['eta'] = 0.1
     #param['max_depth'] = 6
     param['max_depth'] = 4
@@ -100,9 +101,7 @@ def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rou
     param['eval_metric'] = "mlogloss"
     param['min_child_weight'] = 1
     param['subsample'] = 0.7
-    param['colsample_bytree'] = 0.7
-    #param['subsample'] = 0.8
-    #param['colsample_bytree'] = 0.8
+    param['colsample_bytree'] = 0.5
     param['seed'] = seed_val
     num_rounds = num_rounds
 
@@ -113,7 +112,7 @@ def _clf_xgb(x_trn, x_val, y_trn, y_val, feature_names=None, seed_val=0, num_rou
     print('Start Validation training on 80% of the dataset...')
     # train
     watchlist = [ (xgtest, 'test') ]
-    model = xgb.train(plst, xgtrain, num_rounds, watchlist, early_stopping_rounds=50)
+    model = xgb.train(plst, xgtrain, num_rounds, watchlist, early_stopping_rounds=100)
     print('End trainind on 80% of the dataset...')
     print('Start validating prediction on 20% unseen data')
     # predict

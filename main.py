@@ -227,14 +227,16 @@ select_feat = [
     ("manager_id",CountVectorizer()),
     (["encoded_building_id"],None),
     ("building_id",CountVectorizer()),
-    ('mngr_percent_high',None),
-    ('mngr_percent_low',None),
-    ('mngr_percent_medium',None),
-    ('mngr_skill',None), #Beware of overfitting
-    ('bdng_percent_high',None),
-    ('bdng_percent_low',None),
-    ('bdng_percent_medium',None),
-    ('bdng_hype',None), #Beware of overfitting
+    #### WARNING Leak like crazy - TO REFACTOR
+    #('mngr_percent_high',None),
+    #('mngr_percent_low',None),
+    #('mngr_percent_medium',None),
+    #('mngr_skill',None),
+    #('bdng_percent_high',None),
+    #('bdng_percent_low',None),
+    #('bdng_percent_medium',None),
+    #('bdng_hype',None),
+    #### END WARNING
     ("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 pr 1,3?
                                        stop_words='english',
                                        max_features=200)),

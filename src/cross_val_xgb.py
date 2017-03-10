@@ -17,7 +17,7 @@ def cross_val_xgb(params, X, y, cv, metric):
     
     for train_idx, valid_idx in splits:
         print('#################################')
-        print('#########  Validating for fold: \n', n)
+        print('#########  Validating for fold:', n)
 
         xgtrain = xgb.DMatrix(X[train_idx], label=y[train_idx])
         xgtest = xgb.DMatrix(X[valid_idx], label=y[valid_idx])
@@ -28,7 +28,7 @@ def cross_val_xgb(params, X, y, cv, metric):
         rounds = model.best_ntree_limit
         score = model.best_score
         
-        print('Fold', n,'- best round:', rounds)
+        print('\nFold', n,'- best round:', rounds)
         print('Fold', n,'- best score:', score)
         
         list_rounds.append(rounds)

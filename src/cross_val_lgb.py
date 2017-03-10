@@ -17,7 +17,7 @@ def cross_val_lgb(params, X, y, cv, metric):
     
     for train_idx, valid_idx in splits:
         print('#################################')
-        print('#########  Validating for fold: \n', n)
+        print('#########  Validating for fold:', n)
 
         lgb_train = lgb.Dataset(X[train_idx], label=y[train_idx])
         lgb_test = lgb.Dataset(X[valid_idx], label=y[valid_idx], reference=lgb_train)
@@ -37,7 +37,7 @@ def cross_val_lgb(params, X, y, cv, metric):
         y_pred = model.predict(X[valid_idx], num_iteration=rounds)
         score = mlogloss(y[valid_idx], y_pred)
         
-        print('Fold', n,'- best round:', rounds)
+        print('\nFold', n,'- best round:', rounds)
         print('Fold', n,'- best score:', score)
         
         list_rounds.append(rounds)
