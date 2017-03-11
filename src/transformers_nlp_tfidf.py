@@ -40,7 +40,7 @@ def _clean_desc(train, test, y, cache_file):
     return trn,tst,y,cache_file
 
 
-# Massive leakage, check cross val predict
+# Check for leakage in CV
 def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     print("############# TF-IDF + LSA step ################")
     cache_key_train = 'tfidf_lsa_lgb_train'
@@ -65,7 +65,9 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     # print(vectorizer.get_feature_names())
     
     svd = TruncatedSVD(100) #Recommended 100 dimensions for LSA
-    lsa = make_pipeline(svd, Normalizer(copy=False))
+    lsa = make_pipeline(svd,
+                       # Normalizer(copy=False) # Not needed for trees ensemble and Leaky on CV
+                       )
 
     # Run SVD on the training data, then project the training data.
     X_train_lsa = lsa.fit_transform(train_vect)
@@ -76,7 +78,9 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     le = LabelEncoder()
     y_encode = le.fit_transform(y)
     
-    X_train, X_test, y_train, y_test = train_test_split(X_train_lsa, y_encode, test_size=0.2, random_state=42)
+    
+    # Separate train in train + validation data
+    X_train, X_val, y_train, y_val = train_test_split(X_train_lsa, y_encode, test_size=0.2, random_state=42)
 
     # train
     gbm = LGBMClassifier(
@@ -89,6 +93,7 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     
     kf = KFold(n_splits=5, shuffle=True, random_state=1337)
 
+    # Predict out-of-folds train data
     print('Start training - Number of folds: ', kf.get_n_splits())
     train_predictions = out_of_fold_predict(gbm, X_train_lsa, y_encode, kf.split(X_train_lsa))
 
@@ -99,19 +104,21 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     }
     
     gbm.fit(X_train,y_train,
-            eval_set=[(X_test, y_test)],
+            eval_set=[(X_val, y_val)],
             eval_metric='multi_logloss',
             early_stopping_rounds=50,
             verbose = False
            )
     
+    # Now validate the predict value using the previously split validation set
     print('Start validating TF-IDF + LSA...')
     # predict
-    y_pred = gbm.predict_proba(X_test, num_iteration=gbm.best_iteration)
+    y_pred = gbm.predict_proba(X_val, num_iteration=gbm.best_iteration)
     # eval
     print('We stopped at boosting round: ', gbm.best_iteration)
-    print('The mlogloss of prediction is:', mlogloss(y_test, y_pred))
+    print('The mlogloss of prediction is:', mlogloss(y_val, y_pred))
     
+    # Now compute the value for the actual test data using out-of-folds predictions
     print('Start predicting TF-IDF + LSA...')
     test_predictions = gbm.predict_proba(X_test_lsa, num_iteration=gbm.best_iteration)
     

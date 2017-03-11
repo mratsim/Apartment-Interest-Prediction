@@ -18,6 +18,12 @@ def out_of_fold_predict(est, X, y, cv):
         clf = clone(est)
         # Get a validation set for early stopping
         x_trn, x_val, y_trn, y_val = train_test_split(X[train_idx], y[train_idx], test_size=0.2, random_state=42)
+        
+        print(x_trn.shape)
+        print(y_trn.shape)
+        print(x_val.shape)
+        print(y_val.shape)
+        
         clf.fit(x_trn,y_trn,
             eval_set=[(x_val, y_val)],
             eval_metric='multi_logloss',

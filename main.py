@@ -91,7 +91,8 @@ from src.transformers_debug import tr_dumpcsv
 from src.transformers_nlp_tfidf import tr_tfidf_lsa_lgb
 from src.lib_sklearn_transformer_nlp import NLTKPreprocessor, HTMLPreprocessor
 from src.transformers_appart_features import tr_tfidf_features
-from src.transformers_categorical import tr_managerskill, tr_bin_buildings_mngr, tr_bin_buildings_mngr_v2, tr_lower_address, tr_buildinghype
+from src.transformers_categorical import tr_bin_buildings_mngr, tr_bin_buildings_mngr_v2, tr_lower_address
+from src.transformers_categorical_uselabels import tr_managerskill, tr_buildinghype
 from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr, tr_filtered_display_addr
 from src.transformers_geoloc import tr_clustering
 
@@ -103,8 +104,6 @@ tr_pipeline = feat_extraction_pipe(
     tr_datetime,
     tr_split_bath_toilets,
     tr_tfidf_lsa_lgb,
-    tr_managerskill,
-    tr_buildinghype,
     #tr_log_price,
     tr_bucket_rooms,
     #tr_bin_buildings_mngr,
@@ -113,6 +112,8 @@ tr_pipeline = feat_extraction_pipe(
     tr_tfidf_features,
     tr_encoded_manager,
     tr_encoded_building,
+    tr_managerskill,
+    tr_buildinghype,
     tr_encoded_disp_addr,
     tr_encoded_street_addr,
     tr_lower_address,
@@ -227,16 +228,14 @@ select_feat = [
     ("manager_id",CountVectorizer()),
     (["encoded_building_id"],None),
     ("building_id",CountVectorizer()),
-    #### WARNING Leak like crazy - TO REFACTOR
-    #('mngr_percent_high',None),
-    #('mngr_percent_low',None),
-    #('mngr_percent_medium',None),
+    #('mngr_high',None),
+    #('mngr_low',None),
+    #('mngr_medium',None),
     #('mngr_skill',None),
-    #('bdng_percent_high',None),
-    #('bdng_percent_low',None),
-    #('bdng_percent_medium',None),
+    #('bdng_high',None),
+    #('bdng_low',None),
+    #('bdng_medium',None),
     #('bdng_hype',None),
-    #### END WARNING
     ("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 pr 1,3?
                                        stop_words='english',
                                        max_features=200)),
@@ -245,7 +244,8 @@ select_feat = [
                              min_df=2, stop_words='english',
                              use_idf=True),
                     TruncatedSVD(2), # 2 or 3
-                    Normalizer(copy=False)]),
+                    # Normalizer(copy=False) # Not needed for trees ensemble and Leaky on CV
+                    ]),
     #("description",[HTMLPreprocessor(),NLTKPreprocessor(),
     #                TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)]
     #),
@@ -253,8 +253,8 @@ select_feat = [
     ("description", CountVectorizer(vocabulary=vocab_metro_lines,binary=True, lowercase=False)),
     #('Bin_Buildings',None),
     #('Bin_Managers',None),
-    (['top_' + str(p) + '_manager' for p in [1,2,5,10,15,20,25,30,50]],None),
-    (['top_' + str(p) + '_building' for p in [1,2,5,10,15,20,25,30,50]],None),
+    (['top_' + str(p) + '_manager' for p in [1,2,5,10,15,20,25,30,50]],None), #Leak on CV
+    (['top_' + str(p) + '_building' for p in [1,2,5,10,15,20,25,30,50]],None), #Leak on CV
 ]
                     
 
