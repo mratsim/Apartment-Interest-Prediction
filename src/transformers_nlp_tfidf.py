@@ -14,8 +14,6 @@ from bs4 import BeautifulSoup
 from src.metrics import mlogloss
 from src.oof_predict import out_of_fold_predict
 
-from sklearn.model_selection import KFold
-
 # cache
 import os.path #Note: it might be safer to use pathlib, to make sure directory/subdirectory context is kept
 import shelve
@@ -23,7 +21,7 @@ from pickle import HIGHEST_PROTOCOL
 from src.cache import load_from_cache, save_to_cache
 
 #Deprecated use HTMLPreprocessor instead
-def _clean_desc(train, test, y, cache_file):
+def _clean_desc(train, test):
     def _toBeautifulText(text):
         bs =BeautifulSoup(text, "html.parser")
         for br in bs.find_all("br"):
@@ -37,11 +35,11 @@ def _clean_desc(train, test, y, cache_file):
                     CleanDesc = test["description"].apply(lambda x: _toBeautifulText(x))
                     )
 
-    return trn,tst,y,cache_file
+    return trn,tst
 
 
 # Check for leakage in CV
-def tr_tfidf_lsa_lgb(train, test, y, cache_file):
+def tr_tfidf_lsa_lgb(train, test, y, folds, cache_file):
     print("############# TF-IDF + LSA step ################")
     cache_key_train = 'tfidf_lsa_lgb_train'
     cache_key_test = 'tfidf_lsa_lgb_test'
@@ -51,7 +49,7 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     if dict_train is not None and dict_test is not None:
         train_out = train.assign(**dict_train)
         test_out = test.assign(**dict_test)
-        return train_out, test_out, y, cache_file
+        return train_out, test_out, y, folds, cache_file
 
     print('# No cache detected, computing from scratch #')
     vectorizer = TfidfVectorizer(max_features=2**16,
@@ -59,7 +57,7 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
                              use_idf=True)
 
     
-    train_raw, test_raw, _, _ = _clean_desc(train, test, y, cache_file)
+    train_raw, test_raw = _clean_desc(train, test)
     train_vect = vectorizer.fit_transform(train_raw['CleanDesc'])
     test_vect = vectorizer.transform(test_raw['CleanDesc'])
     # print(vectorizer.get_feature_names())
@@ -91,11 +89,9 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
         subsample='0.8'
     )
     
-    kf = KFold(n_splits=5, shuffle=True, random_state=1337)
-
     # Predict out-of-folds train data
-    print('Start training - Number of folds: ', kf.get_n_splits())
-    train_predictions = out_of_fold_predict(gbm, X_train_lsa, y_encode, kf.split(X_train_lsa))
+    print('Start training - Number of folds: ', len(folds))
+    train_predictions = out_of_fold_predict(gbm, X_train_lsa, y_encode, folds)
 
     tfidf_train_names = {
         'tfidf_' + le.classes_[0]: [row[0] for row in train_predictions],
@@ -136,4 +132,4 @@ def tr_tfidf_lsa_lgb(train, test, y, cache_file):
     test_out = test.assign(**tfidf_test_names)
 
 
-    return train_out, test_out, y, cache_file
+    return train_out, test_out, y, folds, cache_file

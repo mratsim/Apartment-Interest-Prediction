@@ -7,13 +7,13 @@ import numpy as np
 # It does not provide the same interface as others as it does not take X, y parameter, only y
 # As such it cannot be use in a Pipeline.
 
-def tr_lower_address(train, test, y, cache_file):
+def tr_lower_address(train, test, y, folds, cache_file):
     def _trans(df):
         return df.assign(
             lower_disp_addr = df['display_address'].apply(str.lower),
             lower_street_addr = df['street_address'].apply(str.lower)
         )
-    return _trans(train),_trans(test), y, cache_file
+    return _trans(train),_trans(test), y, folds, cache_file
 
 # DEPRECATED Apply Label encoder
 def _encode_categoricals(train,test, sColumn):
@@ -27,20 +27,20 @@ def _encode_categoricals(train,test, sColumn):
         return df
     return _trans(train, sColumn, le),_trans(test, sColumn, le)
 
-def tr_encoded_manager(train, test, y, cache_file):
+def tr_encoded_manager(train, test, y, folds, cache_file):
     trn, tst = _encode_categoricals(train,test,"manager_id")
-    return trn, tst, y, cache_file
-def tr_encoded_building(train, test, y, cache_file):
+    return trn, tst, y, folds, cache_file
+def tr_encoded_building(train, test, y, folds, cache_file):
     trn, tst = _encode_categoricals(train,test,"building_id")
-    return trn, tst, y, cache_file
-def tr_encoded_disp_addr(train, test, y, cache_file):
+    return trn, tst, y, folds, cache_file
+def tr_encoded_disp_addr(train, test, y, folds, cache_file):
     trn, tst = _encode_categoricals(train,test,"display_address")
-    return trn, tst, y, cache_file
-def tr_encoded_street_addr(train, test, y, cache_file):
+    return trn, tst, y, folds, cache_file
+def tr_encoded_street_addr(train, test, y, folds, cache_file):
     trn, tst = _encode_categoricals(train,test,"street_address")
-    return trn, tst, y, cache_file
+    return trn, tst, y, folds, cache_file
 
-def tr_filtered_display_addr(train, test, y, cache_file):
+def tr_filtered_display_addr(train, test, y, folds, cache_file):
     address_map = {
     'w': 'west',
     'st.': 'street',
@@ -75,13 +75,13 @@ def tr_filtered_display_addr(train, test, y, cache_file):
         df['other_address'] = df[new_cols].apply(lambda x: 1 if x.sum() == 0 else 0, axis=1)
         return df
     
-    return _trans(train), _trans(test), y, cache_file
+    return _trans(train), _trans(test), y, folds, cache_file
 
 #############
 # Bins managers and building
 # Since we don't use y, there shouldn't be leakage if we use the total count train + test.
 # Issue: the current version can put 2 same  building in separate bins
-def tr_bin_buildings_mngr(train, test, y, cache_file):
+def tr_bin_buildings_mngr(train, test, y, folds, cache_file):
     def _trans(df):
         return df.assign(
             #duplicates = drop avoids error whena single value would need to appear in 2 different bins
@@ -91,12 +91,12 @@ def tr_bin_buildings_mngr(train, test, y, cache_file):
             Bin_Buildings = pd.qcut(df['building_id'].value_counts(), 30, labels=False,duplicates='drop'),
             Bin_Managers = pd.qcut(df['manager_id'].value_counts(), 30, labels=False, duplicates='drop')
             )
-    return _trans(train), _trans(test), y, cache_file
+    return _trans(train), _trans(test), y, folds, cache_file
 
 ##############
 # V2 version which encode the manager/building in a new column
 # Slight leak but probably fine since semi-supervised learning/don't use labels
-def tr_bin_buildings_mngr_v2(train, test, y, cache_file):
+def tr_bin_buildings_mngr_v2(train, test, y, folds, cache_file):
     def _check_percentile(series_valcount,percentile):
         cutoff = 100 - percentile
         return series_valcount.index.values[
@@ -119,5 +119,5 @@ def tr_bin_buildings_mngr_v2(train, test, y, cache_file):
     trn = _trans(train,mngr_count,bdng_count)
     tst = _trans(test,mngr_count,bdng_count)
     
-    return trn, tst, y, cache_file
+    return trn, tst, y, folds, cache_file
     

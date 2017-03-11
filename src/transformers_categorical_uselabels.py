@@ -10,8 +10,6 @@ from lightgbm import LGBMClassifier
 from src.metrics import mlogloss
 from src.oof_predict import out_of_fold_predict
 
-from sklearn.model_selection import KFold
-
 # cache
 import os.path #Note: it might be safer to use pathlib, to make sure directory/subdirectory context is kept
 import shelve
@@ -20,7 +18,7 @@ from src.cache import load_from_cache, save_to_cache
 
 
 # Check for leakage in CV
-def tr_managerskill(train, test, y, cache_file):
+def tr_managerskill(train, test, y, folds, cache_file):
     print("\n\n############# Manager skill step ################")
     cache_key_train = 'managerskill_train'
     cache_key_test = 'managerskill_test'
@@ -30,7 +28,7 @@ def tr_managerskill(train, test, y, cache_file):
     if dict_train is not None and dict_test is not None:
         train_out = train.assign(**dict_train)
         test_out = test.assign(**dict_test)
-        return train_out, test_out, y, cache_file
+        return train_out, test_out, y, folds, cache_file
 
     print('# No cache detected, computing from scratch #')
     lb = LabelBinarizer(sparse_output=True)
@@ -57,11 +55,9 @@ def tr_managerskill(train, test, y, cache_file):
         subsample='0.8'
     )
     
-    kf = KFold(n_splits=5, shuffle=True, random_state=1337)
-
     # Predict out-of-folds train data
-    print('Start training - Number of folds: ', kf.get_n_splits())
-    train_predictions = out_of_fold_predict(gbm, X_train_mngr, y_encode, kf.split(X_train_mngr))
+    print('Start training - Number of folds: ', len(folds))
+    train_predictions = out_of_fold_predict(gbm, X_train_mngr, y_encode, folds)
 
     mngr_train_names = {
         'mngr_' + le.classes_[0]: [row[0] for row in train_predictions],
@@ -103,11 +99,11 @@ def tr_managerskill(train, test, y, cache_file):
     train_out = train.assign(**mngr_train_names)
     test_out = test.assign(**mngr_test_names)
 
-    return train_out, test_out, y, cache_file
+    return train_out, test_out, y, folds, cache_file
 
 
 # Check for leakage in CV
-def tr_buildinghype(train, test, y, cache_file):
+def tr_buildinghype(train, test, y, folds, cache_file):
     print("\n\n############# Building hype step ################")
     cache_key_train = 'buildinghype_train'
     cache_key_test = 'buildinghype_test'
@@ -117,7 +113,7 @@ def tr_buildinghype(train, test, y, cache_file):
     if dict_train is not None and dict_test is not None:
         train_out = train.assign(**dict_train)
         test_out = test.assign(**dict_test)
-        return train_out, test_out, y, cache_file
+        return train_out, test_out, y, folds, cache_file
 
     print('# No cache detected, computing from scratch #')
     lb = LabelBinarizer(sparse_output=True)
@@ -144,11 +140,9 @@ def tr_buildinghype(train, test, y, cache_file):
         subsample='0.8'
     )
     
-    kf = KFold(n_splits=5, shuffle=True, random_state=1337)
-
     # Predict out-of-folds train data
-    print('Start training - Number of folds: ', kf.get_n_splits())
-    train_predictions = out_of_fold_predict(gbm, X_train_bdng, y_encode, kf.split(X_train_bdng))
+    print('Start training - Number of folds: ', len(folds))
+    train_predictions = out_of_fold_predict(gbm, X_train_bdng, y_encode, folds)
 
     bdng_train_names = {
         'bdng_' + le.classes_[0]: [row[0] for row in train_predictions],
@@ -190,4 +184,4 @@ def tr_buildinghype(train, test, y, cache_file):
     train_out = train.assign(**bdng_train_names)
     test_out = test.assign(**bdng_test_names)
 
-    return train_out, test_out, y, cache_file
+    return train_out, test_out, y, folds, cache_file

@@ -2,7 +2,7 @@
 
 #############
 # Manager skill
-def tr_managerskill(train, test, y, cache_file):
+def tr_managerskill(train, test, y, folds, cache_file):
     # Beware of not leaking "mean" or frequency from train to test.
     # WARNING Leak like crazy - TO REFACTOR
     
@@ -39,11 +39,11 @@ def tr_managerskill(train, test, y, cache_file):
                                     'mngr_percent_medium',
                                     'mngr_skill']]  = -1 # mean_val.values
 
-    return trn, tst, y, cache_file
+    return trn, tst, y, folds, cache_file
 
 #############
 # Building hype
-def tr_buildinghype(train, test, y, cache_file):
+def tr_buildinghype(train, test, y, folds, cache_file):
     # Beware of not leaking "mean" or frequency from train to test.
     # WARNING Leak like crazy - TO REFACTOR
     
@@ -80,4 +80,4 @@ def tr_buildinghype(train, test, y, cache_file):
                                     'bdng_percent_medium',
                                     'bdng_hype']]  = -1 # mean_val.values
 
-    return trn, tst, y, cache_file
+    return trn, tst, y, folds, cache_file

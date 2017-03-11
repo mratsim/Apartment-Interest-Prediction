@@ -13,7 +13,7 @@ import time
 # All lat/long must be converted to radians, i.e. multiplied by pi/180
 #output is also in rad
 
-def tr_clustering(train,test, y, cache_file):
+def tr_clustering(train,test, y, folds, cache_file):
     def _get_centermost_point(cluster):
         centroid = (MultiPoint(cluster).centroid.x, MultiPoint(cluster).centroid.y)
         centermost_point = min(cluster, key=lambda point: great_circle(point, centroid).m)
@@ -55,4 +55,4 @@ def tr_clustering(train,test, y, cache_file):
     
     hdbscan, cluster_centers, trn = _cluster_train(train)
     tst = _cluster_test(hdbscan, cluster_centers, test)
-    return trn,tst, y, cache_file
+    return trn,tst, y, folds, cache_file

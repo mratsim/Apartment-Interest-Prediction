@@ -4,7 +4,7 @@ from workalendar.usa import NewYork
 import datetime
 
 # This transformer extracts the date/month/year and timestamp in a neat package
-def tr_datetime(train,test, y, cache_file):
+def tr_datetime(train,test, y, folds, cache_file):
     def _isWeekend(i):
         if i in [5,6]:
             return 1
@@ -65,4 +65,4 @@ def tr_datetime(train,test, y, cache_file):
             Is_SchoolHoliday = df["Created_TS"].dt.strftime('%Y-%m-%d').isin(school_holidays)
             
             )
-    return _trans(train), _trans(test), y, cache_file
+    return _trans(train), _trans(test), y, folds, cache_file

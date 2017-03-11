@@ -5,17 +5,15 @@ import time
 
 
 #Ideally cross val split should be done before feature engineering, and feature engineering + selection should be done separately for each splits so it better mimics out-of-sample predictions
-def cross_val_lgb(params, X, y, cv, metric):
+def cross_val_lgb(params, X, y, folds, metric):
     n =1
     num_rounds = 3000
     
     list_rounds = []
     list_scores = []
+
     
-    splits = cv.split(X, y)
-    
-    
-    for train_idx, valid_idx in splits:
+    for train_idx, valid_idx in folds:
         print('#################################')
         print('#########  Validating for fold:', n)
 

@@ -14,7 +14,7 @@ from sklearn.decomposition import TruncatedSVD, NMF
 
 # feature selection
 # from sklearn.feature_selection import SelectFromModel, RFECV
-# from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold
 
 # Custom helper functions
 from src.star_command import feat_extraction_pipe
@@ -75,7 +75,7 @@ idx_test = df_test['listing_id']
 # Lag: high interest in the past hour/day
 # Lag: low interest in the past hour/day
 # Semaine juste avant/après les congés
-# Chercher 1LDK, et Squae meters
+# Chercher 1LDK, et Square meters
 # Spell checker
 # Number of spelling errors
 # Détecter mêmes photos/stock photos
@@ -263,14 +263,16 @@ select_feat = [
 
 ################ Preprocessing #####################
 cache_file = './cache.db'
+cv = StratifiedKFold(n_splits=7, shuffle=True, random_state=1337)
+folds = list(cv.split(X,y))
 
 # Sorry for the spaghetti code
 x_trn, x_val, y_trn, y_val, labelencoder, X_train, X_test, y_train = preprocessing(
-   X, X_test, y, tr_pipeline, select_feat, cache_file)
+   X, X_test, y, tr_pipeline, select_feat, folds, cache_file)
 
 ############ Train and Validate ####################
 print("############ Final Classifier ######################")
-clf, metric, n_stop = training_step(x_trn, x_val, y_trn, y_val, X_train, y_train)
+clf, metric, n_stop = training_step(x_trn, x_val, y_trn, y_val, X_train, y_train, folds)
 
 ################## Predict #########################
 output(X_test,idx_test,clf,labelencoder, n_stop, metric)
