@@ -93,7 +93,7 @@ from src.lib_sklearn_transformer_nlp import NLTKPreprocessor, HTMLPreprocessor
 from src.transformers_appart_features import tr_tfidf_features
 from src.transformers_categorical import tr_bin_buildings_mngr, tr_bin_buildings_mngr_v2, tr_lower_address
 from src.transformers_categorical_uselabels import tr_managerskill, tr_buildinghype
-from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr, tr_filtered_display_addr
+from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr, tr_filtered_display_addr, tr_dedup_features
 from src.transformers_geoloc import tr_clustering
 
 # Feature extraction - sequence of transformations
@@ -110,6 +110,7 @@ tr_pipeline = feat_extraction_pipe(
     tr_bin_buildings_mngr_v2,
     tr_price_per_room,
     tr_tfidf_features,
+    tr_dedup_features,
     tr_encoded_manager,
     tr_encoded_building,
     tr_managerskill,
@@ -236,10 +237,11 @@ select_feat = [
     #('bdng_low',None),
     #('bdng_medium',None),
     #('bdng_hype',None),
-    ("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 pr 1,3?
-                                       stop_words='english',
-                                       max_features=200)),
+    #("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 pr 1,3?
+    #                                   stop_words='english',
+    #                                   max_features=200)),
     #("joined_feat_underscore", CountVectorizer(max_features=200)),
+    ("dedup_features", CountVectorizer(max_features=200)),
     ("description", [TfidfVectorizer(max_features=2**16,
                              min_df=2, stop_words='english',
                              use_idf=True),

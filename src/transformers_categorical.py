@@ -77,6 +77,37 @@ def tr_filtered_display_addr(train, test, y, folds, cache_file):
     
     return _trans(train), _trans(test), y, folds, cache_file
 
+def tr_dedup_features(train, test, y, folds, cache_file):
+    def _clean(s):
+        x = s.replace("-", "")
+        x = x.replace(" ", "")
+        x = x.replace("twenty four hour", "24")
+        x = x.replace("24/7", "24")
+        x = x.replace("24hr", "24")
+        x = x.replace("24-hour", "24")
+        x = x.replace("24hour", "24")
+        x = x.replace("24 hour", "24")
+        x = x.replace("common", "cm")
+        x = x.replace("concierge", "doorman")
+        x = x.replace("bicycle", "bike")
+        x = x.replace("private", "pv")
+        x = x.replace("deco", "dc")
+        x = x.replace("decorative", "dc")
+        x = x.replace("onsite", "os")
+        x = x.replace("outdoor", "od")
+        x = x.replace("ss appliances", "stainless")
+        return x
+    def _encode_features(l):
+        k = 4
+        return list(set(map(lambda x: _clean(x)[:k].strip(), l))) #convert to set first to remove duplicate then back to list
+    def _trans(df):
+        return df.assign(
+            dedup_features = df['features'].apply(_encode_features).str.join(", ")
+        )
+    return _trans(train), _trans(test), y, folds, cache_file
+    
+
+
 #############
 # Bins managers and building
 # Since we don't use y, there shouldn't be leakage if we use the total count train + test.
