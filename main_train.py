@@ -29,8 +29,8 @@ def training_step(x_trn, x_val, y_trn, y_val, X_train, y_train, folds):
     #mean_round = cross_val_lgb(params, X_train, y_train, folds, metric)
     
     print('\n\nStart Training on the whole dataset...')
-    #n_stop = np.int(mean_round * 1.1) #0.54874
-    n_stop = np.int(mean_round) #0.54934 with XGBoost
+    n_stop = np.int(mean_round * 1.1) #0.54874
+    #n_stop = np.int(mean_round) #0.54934 with XGBoost
 
     
     final_clf = xgb.train(params, xgtrain, n_stop)
@@ -52,12 +52,12 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
         'boosting_type': 'gbdt',
         'objective': 'multiclass',
         'num_class': 3,
-        'metric': {'multi_logloss'},
+        'metric': {'multi_error','multi_logloss'},
         'learning_rate': 0.1,
-        #'feature_fraction': 0.8,
-        #'bagging_fraction': 0.8,
-        'num_leaves': 32,
-        #'bagging_freq': 3,
+        'feature_fraction': 0.7,
+        'bagging_fraction': 0.5,
+        'num_leaves': 8,
+        'bagging_freq': 3,
         'verbose': 0
     }
 
@@ -71,6 +71,8 @@ def _clf_lgb(x_trn, x_val, y_trn, y_val):
                     verbose_eval=True,
                     feature_name='auto')
     print('End trainind on 80% of the dataset...')
+    
+    print('score', gbm.best_score)
     
     print('Start validating prediction on 20% unseen data')
     # predict

@@ -95,6 +95,7 @@ from src.transformers_categorical import tr_bin_buildings_mngr, tr_bin_buildings
 from src.transformers_categorical_uselabels import tr_managerskill, tr_buildinghype
 from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr, tr_filtered_display_addr, tr_dedup_features
 from src.transformers_geoloc import tr_clustering
+from src.transformers_img_metadata import tr_magic_folder_time
 
 # Feature extraction - sequence of transformations
 tr_pipeline = feat_extraction_pipe(
@@ -121,7 +122,8 @@ tr_pipeline = feat_extraction_pipe(
     tr_filtered_display_addr,
     #tr_clustering,
     tr_price_per_room,
-    tr_bin_price
+    tr_bin_price,
+    tr_magic_folder_time
     #tr_dumpcsv
 )
 
@@ -257,6 +259,7 @@ select_feat = [
     #('Bin_Managers',None),
     (['top_' + str(p) + '_manager' for p in [1,2,5,10,15,20,25,30,50]],None), #Leak on CV
     (['top_' + str(p) + '_building' for p in [1,2,5,10,15,20,25,30,50]],None), #Leak on CV
+    ('time_stamp',None)
 ]
                     
 

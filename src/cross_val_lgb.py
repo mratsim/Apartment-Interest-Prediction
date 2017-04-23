@@ -22,18 +22,17 @@ def cross_val_lgb(params, X, y, folds, metric):
 
         model = lgb.train(params,
                     lgb_train,
-                    num_boost_round=2048,
+                    num_boost_round=num_rounds,
                     valid_sets=lgb_test,
-                    early_stopping_rounds=50,
-                    verbose_eval=False,
-                    feature_name='auto')
+                    early_stopping_rounds=300,
+                    verbose_eval=False)
         
         rounds = model.best_iteration
-        #score = model.best_score
+        score = model.best_score
         
         # Argh best_score doesn't exist yet in LightGBM: ticket open - https://github.com/Microsoft/LightGBM/issues/329
-        y_pred = model.predict(X[valid_idx], num_iteration=rounds)
-        score = mlogloss(y[valid_idx], y_pred)
+        #y_pred = model.predict(X[valid_idx], num_iteration=rounds)
+        #score = mlogloss(y[valid_idx], y_pred)
         
         print('\nFold', n,'- best round:', rounds)
         print('Fold', n,'- best score:', score)
