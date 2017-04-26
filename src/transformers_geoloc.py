@@ -56,3 +56,15 @@ def tr_clustering(train,test, y, folds, cache_file):
     hdbscan, cluster_centers, trn = _cluster_train(train)
     tst = _cluster_test(hdbscan, cluster_centers, test)
     return trn,tst, y, folds, cache_file
+
+def tr_naive_density(train,test, y, folds, cache_file):
+    train["pos"] = train.longitude.round(3).astype(str) + '_' + train.latitude.round(3).astype(str)
+    test["pos"] = test.longitude.round(3).astype(str) + '_' + test.latitude.round(3).astype(str)
+
+    vals = train['pos'].value_counts()
+    dvals = vals.to_dict()
+    train["density"] = train['pos'].apply(lambda x: dvals.get(x, vals.min()))
+    test["density"] = test['pos'].apply(lambda x: dvals.get(x, vals.min()))
+    
+    return train,test, y, folds, cache_file
+    

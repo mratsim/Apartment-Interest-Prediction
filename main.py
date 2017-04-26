@@ -85,6 +85,7 @@ idx_test = df_test['listing_id']
 
 # # Command Center
 
+from src.transformers_outlier_removal import tr_remove_outliers
 from src.transformers_numeric import tr_numphot, tr_numfeat, tr_numdescwords, tr_log_price, tr_bucket_rooms, tr_price_per_room, tr_split_bath_toilets, tr_bin_price
 from src.transformers_time import tr_datetime
 from src.transformers_debug import tr_dumpcsv
@@ -94,14 +95,20 @@ from src.transformers_appart_features import tr_tfidf_features
 from src.transformers_categorical import tr_bin_buildings_mngr, tr_bin_buildings_mngr_v2, tr_lower_address
 from src.transformers_categorical_uselabels import tr_managerskill, tr_buildinghype
 from src.transformers_categorical import tr_encoded_manager, tr_encoded_building, tr_encoded_disp_addr, tr_encoded_street_addr, tr_filtered_display_addr, tr_dedup_features
-from src.transformers_geoloc import tr_clustering
+from src.transformers_categorical_magic_encoding import tr_manager_magic, tr_building_magic
+from src.transformers_geoloc import tr_clustering, tr_naive_density
+from src.transformers_geocoordinates import tr_rotation_around_central_park, tr_dist_to_main_centers
 from src.transformers_img_metadata import tr_magic_folder_time
+from src.transformers_nlp_sentiment import tr_sentiment
+from src.transformers_text_mining import tr_desc_mining
 
 # Feature extraction - sequence of transformations
 tr_pipeline = feat_extraction_pipe(
+    tr_remove_outliers,
     tr_numphot,
     tr_numfeat,
     tr_numdescwords,
+    tr_desc_mining,
     tr_datetime,
     tr_split_bath_toilets,
     tr_tfidf_lsa_lgb,
@@ -114,16 +121,22 @@ tr_pipeline = feat_extraction_pipe(
     tr_dedup_features,
     tr_encoded_manager,
     tr_encoded_building,
-    tr_managerskill,
-    tr_buildinghype,
+    #tr_managerskill, #Leaky
+    #tr_buildinghype,  #Leaky
     tr_encoded_disp_addr,
     tr_encoded_street_addr,
     tr_lower_address,
     tr_filtered_display_addr,
-    #tr_clustering,
+    #tr_clustering, #HDBSCAN auto clustering not helping, DBSCAN would probably be better but the algo goes out of mem
+    #tr_naive_density,
+    tr_rotation_around_central_park,
+    tr_dist_to_main_centers,
     tr_price_per_room,
     tr_bin_price,
+    #tr_manager_magic, #slow and probably leaky
+    #tr_building_magic, #slow and probably leaky
     tr_magic_folder_time
+    #tr_sentiment
     #tr_dumpcsv
 )
 
@@ -191,6 +204,11 @@ select_feat = [
     #("latitude_cluster",None),
     #("longitude_cluster",None),
     #(['cluster'],None), #
+    #('density', None),
+    (['rho_centralpark','phi_centralpark'],None), # Note: Is the GPS coordinate of Central Park allowed in the competition?
+    (['coord_' + str(angle) + '_X' for angle in [15,30,45,60]],None),
+    (['coord_' + str(angle) + '_Y' for angle in [15,30,45,60]],None),
+    # (['distance_' + str(center) + '_loc' for center in ['manhattan','brooklyn','bronx','queens','staten']],None), # Note: Is the GPS coordinate of NY centers allowed in the competition?
     #('log_price',None),
     (["price"],None),
     #('Bin_price',None),
@@ -234,11 +252,17 @@ select_feat = [
     #('mngr_high',None),
     #('mngr_low',None),
     #('mngr_medium',None),
-    #('mngr_skill',None),
+    #('mngr_skill',None), ## Leaky DON'T USE
+    #('manager_magic_low', None),  ## Probably Leaky
+    #('manager_magic_medium', None),
+    #('manager_magic_high', None),
     #('bdng_high',None),
     #('bdng_low',None),
     #('bdng_medium',None),
-    #('bdng_hype',None),
+    #('bdng_hype',None), ## Leaky DON'T USE
+    #('building_magic_low', None),  ## Probably Leaky
+    #('building_magic_medium', None),
+    #('building_magic_high', None),
     #("joined_features", CountVectorizer( ngram_range=(1, 2), #1,2 pr 1,3?
     #                                   stop_words='english',
     #                                   max_features=200)),
@@ -255,11 +279,18 @@ select_feat = [
     #),
     ("description", CountVectorizer(vocabulary=vocab_metro,binary=True)),
     ("description", CountVectorizer(vocabulary=vocab_metro_lines,binary=True, lowercase=False)),
+    ("redacted", None),
+    ("email", None),
+    ("number_caps", None),
+    ("number_lines", None),
+    ("phone_nr", None),
+    #("sentiment_polarity", None),
+    #("sentiment_subjectivity", None),
     #('Bin_Buildings',None),
     #('Bin_Managers',None),
     (['top_' + str(p) + '_manager' for p in [1,2,5,10,15,20,25,30,50]],None), #Leak on CV
     (['top_' + str(p) + '_building' for p in [1,2,5,10,15,20,25,30,50]],None), #Leak on CV
-    ('time_stamp',None)
+    ('time_stamp',None) #Magic feature
 ]
                     
 

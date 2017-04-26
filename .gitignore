@@ -8,3 +8,5 @@ core
 *.txt
 *.jpg
 data_preprocessed/
+*.7z
+baseline/
