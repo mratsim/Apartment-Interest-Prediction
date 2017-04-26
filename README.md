@@ -1,5 +1,5 @@
-# Appartment_Interest_Prediction
-Predict people interest in renting specific appartments. The challenge combines structured data, geolocalization, time data, free text and images.
+# Apartment_Interest_Prediction
+Predict people interest in renting specific apartments. The challenge combines structured data, geolocalization, time data, free text and images.
 
 
 ## Overview of my solution
@@ -25,7 +25,7 @@ From the latitude and longitude, I created clusters using Density-based clusteri
 I would have preferred `DBSCAN` and setting epsilon to 200 meters but unfortunately, `Scikitlearn`'s `DBSCAN` is not properly optimized. Trying to get 40000 (train set) or 70000 (test set) pairwise haversine distance goes KABOOM on my memory.
 (HDBSCAN creates cluster fully automatically from density, but NYC is too dense)
 
-From the public kernels I've also taken the coordinate of Central Park, Brooklyn, Queens .... to compute the distance of each appartment from those center.
+From the public kernels I've also taken the coordinate of Central Park, Brooklyn, Queens .... to compute the distance of each apartment from those center.
 
 #### Apartment features
 Apartment features (cat, dog, doorman, laundry in building ...) were deduplicated and encoded using a 4-letter encoding scheme to reduce duplication further.
@@ -56,7 +56,7 @@ Prices > 13000 were clipped
 
 #### Images
 Like many other I didn't process the image at ll, besides using the magic leak (folder creation time).
-The biggest issue was that the number of images per appartment was irregular, some had a floor plans, other had furnitures, other had nothing.
+The biggest issue was that the number of images per apartment was irregular, some had a floor plans, other had furnitures, other had nothing.
 
 I did extract metadata from the images to process add resolution, image height and width to my model.
 Unfortunately the json file was 800MB or 1.4GB in CSV with thousands of sparse columns. Pandas couldn't load that in my machine. The workaround would be to a. buy more RAM, b. use a dictionary structure but it was clunky and time consuming.
