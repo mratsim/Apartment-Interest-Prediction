@@ -1,4 +1,4 @@
-# Apartment_Interest_Prediction
+# Apartment Interest Prediction
 Predict people interest in renting specific apartments. The challenge combines structured data, geolocalization, time data, free text and images.
 
 
